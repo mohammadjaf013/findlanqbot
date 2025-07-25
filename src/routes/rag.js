@@ -1,10 +1,6 @@
-const { isValidFileType, saveUploadedFile, processWordFile, ragQuery } = require('../services/rag');
-const { askGemini,askGeminiWithFetch,testGemini } = require('../services/ai');
+const { isValidFileType, saveUploadedFile, processWordFile, ragQuery, getFilesList, deleteFile } = require('../services/rag');
+const { askGemini } = require('../services/ai');
 const fs = require('fs');
-
-// ذخیره Vector Store فعلی در حافظه
-let currentVectorStore = null;
-let currentFileInfo = null;
 
 module.exports = (app) => {
   // آپلود و پردازش فایل Word
@@ -37,16 +33,8 @@ module.exports = (app) => {
       // ذخیره فایل
       const filePath = await saveUploadedFile(file, file.name);
       
-      // پردازش فایل
-      const result = await processWordFile(filePath);
-      
-      // ذخیره Vector Store فعلی
-      currentVectorStore = result.vectorStore;
-      currentFileInfo = {
-        fileName: file.name,
-        chunks: result.chunks,
-        uploadedAt: new Date()
-      };
+      // پردازش فایل و ذخیره در دیتابیس
+      const result = await processWordFile(filePath, file.name);
 
       // حذف فایل موقت
       fs.unlinkSync(filePath);
@@ -55,7 +43,8 @@ module.exports = (app) => {
         success: true,
         fileName: file.name,
         chunksCount: result.chunks.length,
-        message: 'فایل با موفقیت آپلود و پردازش شد'
+        fileHash: result.fileHash,
+        message: 'فایل با موفقیت آپلود و در دیتابیس ذخیره شد'
       });
 
     } catch (error) {
@@ -66,7 +55,7 @@ module.exports = (app) => {
     }
   });
 
-  // پرسش از فایل آپلود شده
+  // پرسش از همه فایل‌های ذخیره شده
   app.post('/api/rag/ask', async (c) => {
     try {
       const { question } = await c.req.json();
@@ -77,27 +66,17 @@ module.exports = (app) => {
         }, 400);
       }
 
-      // بررسی وجود Vector Store
-      if (!currentVectorStore || !currentFileInfo) {
-        return c.json({ 
-          error: 'ابتدا باید فایلی آپلود کنید' 
-        }, 404);
-      }
-
-      // RAG Query
-      const ragResult = await ragQuery(currentVectorStore, question);
+      // RAG Query از دیتابیس
+      const ragResult = await ragQuery(question);
       
       // ارسال به Gemini
-      const answer2 = await testGemini();
-      console.log(answer2)
-      const answer = await askGeminiWithFetch(question, ragResult.context);
+      const answer = await askGemini(question, ragResult.context);
 
       return c.json({
         success: true,
         question: question,
         answer: answer,
         context: ragResult.context,
-        fileName: currentFileInfo.fileName,
         chunksUsed: ragResult.context.length
       });
 
@@ -109,44 +88,31 @@ module.exports = (app) => {
     }
   });
 
-  // اطلاعات فایل فعلی
-  app.get('/api/rag/current-file', async (c) => {
+  // لیست همه فایل‌های ذخیره شده
+  app.get('/api/rag/files', async (c) => {
     try {
-      if (!currentFileInfo) {
-        return c.json({
-          success: true,
-          hasFile: false,
-          message: 'هیچ فایلی آپلود نشده است'
-        });
-      }
-
+      const files = await getFilesList();
+      
       return c.json({
         success: true,
-        hasFile: true,
-        fileName: currentFileInfo.fileName,
-        chunksCount: currentFileInfo.chunks.length,
-        uploadedAt: currentFileInfo.uploadedAt
+        files: files,
+        totalFiles: files.length
       });
 
     } catch (error) {
-      console.error('Error in /api/rag/current-file:', error);
+      console.error('Error in /api/rag/files:', error);
       return c.json({ 
-        error: error.message || 'خطا در دریافت اطلاعات فایل' 
+        error: error.message || 'خطا در دریافت لیست فایل‌ها' 
       }, 500);
     }
   });
 
-  // حذف فایل فعلی
-  app.delete('/api/rag/current-file', async (c) => {
+  // حذف فایل خاص
+  app.delete('/api/rag/files/:fileName', async (c) => {
     try {
-      if (!currentFileInfo) {
-        return c.json({ 
-          error: 'هیچ فایلی برای حذف وجود ندارد' 
-        }, 404);
-      }
-
-      currentVectorStore = null;
-      currentFileInfo = null;
+      const fileName = c.req.param('fileName');
+      
+      await deleteFile(fileName);
 
       return c.json({
         success: true,
@@ -154,7 +120,7 @@ module.exports = (app) => {
       });
 
     } catch (error) {
-      console.error('Error in /api/rag/current-file:', error);
+      console.error('Error in /api/rag/files/:fileName:', error);
       return c.json({ 
         error: error.message || 'خطا در حذف فایل' 
       }, 500);

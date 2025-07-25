@@ -1,9 +1,10 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { RecursiveCharacterTextSplitter } = require('langchain/text_splitter');
-const { MemoryVectorStore } = require('langchain/vectorstores/memory');
 const mammoth = require('mammoth');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
+const { saveFileAndChunks, searchChunks, getFilesList, deleteFile } = require('./db');
 
 // تنظیمات API کلیدها
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyDaZf6m6Qc-j_Mky9Zk9jRTQPffvYXQd9M';
@@ -87,8 +88,8 @@ async function searchSimilar(vectorStore, query, k = 5) {
   }
 }
 
-// پردازش کامل فایل Word
-async function processWordFile(filePath) {
+// پردازش کامل فایل Word و ذخیره در دیتابیس
+async function processWordFile(filePath, fileName) {
   try {
     // استخراج متن
     const text = await extractTextFromWord(filePath);
@@ -96,26 +97,29 @@ async function processWordFile(filePath) {
     // تقسیم به chunks
     const chunks = await splitText(text);
     
-    // ایجاد Vector Store
-    const vectorStore = await createVectorStore(chunks);
+    // ایجاد hash برای فایل
+    const fileHash = crypto.createHash('md5').update(text).digest('hex');
+    
+    // ذخیره در دیتابیس
+    await saveFileAndChunks(fileName, fileHash, chunks);
     
     return {
       success: true,
       text: text,
       chunks: chunks,
-      vectorStore: vectorStore,
-      message: 'فایل با موفقیت پردازش شد'
+      fileHash: fileHash,
+      message: 'فایل با موفقیت پردازش و ذخیره شد'
     };
   } catch (error) {
     throw new Error(`خطا در پردازش فایل: ${error.message}`);
   }
 }
 
-// RAG Query
-async function ragQuery(vectorStore, question) {
+// RAG Query با استفاده از دیتابیس
+async function ragQuery(question) {
   try {
-    // جستجوی متن‌های مشابه
-    const similarTexts = await searchSimilar(vectorStore, question);
+    // جستجوی متن‌های مشابه در دیتابیس
+    const similarTexts = await searchChunks(question, 5);
     
     // ساخت prompt برای Gemini
     const context = similarTexts.join('\n\n');
@@ -144,6 +148,6 @@ module.exports = {
   saveUploadedFile,
   processWordFile,
   ragQuery,
-  searchSimilar,
-  createVectorStore
+  getFilesList,
+  deleteFile
 }; 

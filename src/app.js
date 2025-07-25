@@ -29,13 +29,12 @@ app.get('/', (c) => {
       health: '/api/health',
       ask: '/api/ask (POST)',
       documents: '/api/documents (POST)',
-      rag: {
-        upload: '/api/rag/upload (POST)',
-        ask: '/api/rag/ask (POST)',
-        files: '/api/rag/files (GET)',
-        fileInfo: '/api/rag/files/:fileId (GET)',
-        deleteFile: '/api/rag/files/:fileId (DELETE)'
-      }
+                   rag: {
+               upload: '/api/rag/upload (POST)',
+               ask: '/api/rag/ask (POST)',
+               files: '/api/rag/files (GET)',
+               deleteFile: '/api/rag/files/:fileName (DELETE)'
+             }
     }
   });
 });
