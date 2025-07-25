@@ -1,0 +1,33 @@
+{
+  "name": "findlanqbot",
+  "version": "1.0.0",
+  "description": "AI Chat Platform with Hono Backend and Next.js Frontend",
+  "main": "src/app.js",
+  "scripts": {
+    "dev": "node src/app.js",
+    "start": "node src/app.js",
+    "build": "echo 'No build step needed for Hono'",
+    "test": "echo 'No tests specified'"
+  },
+  "keywords": [
+    "ai",
+    "chat",
+    "hono",
+    "gemini"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@langchain/google-genai": "^0.2.16",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "hono": "^3.12.0",
+    "langchain": "^0.3.30",
+    "mammoth": "^1.9.1",
+    "sqlite3": "^5.1.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
