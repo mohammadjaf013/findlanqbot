@@ -14,7 +14,7 @@ async function askGemini(question, docs) {
     }
     console.log("GEMINI_API_KEY",GEMINI_API_KEY)
     // انتخاب مدل
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const context = docs.length > 0 ? `\n\nاطلاعات مربوطه:\n${docs.join('\n\n')}` : '';
     

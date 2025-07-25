@@ -16,7 +16,7 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
 
-  const API_URL =  'http://localhost:3002' //process.env.NEXT_PUBLIC_API_URL ||
+  const API_URL =  'https://laughing-space-umbrella-q7xwqx9rpqcx9g9-3001.app.github.dev/api/rag/ask' //process.env.NEXT_PUBLIC_API_URL ||
 
   const sendQuestion = async () => {
     if (!question.trim() || loading) return
