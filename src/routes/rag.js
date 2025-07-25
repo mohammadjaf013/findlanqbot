@@ -127,5 +127,34 @@ module.exports = (app) => {
     }
   });
 
+  // تست RAG - برای بررسی embeddings
+  app.post('/api/rag/test', async (c) => {
+    try {
+      const { question } = await c.req.json();
+      
+      if (!question) {
+        return c.json({ 
+          error: 'question الزامی است' 
+        }, 400);
+      }
+
+      // RAG Query بدون استفاده از Gemini
+      const ragResult = await ragQuery(question);
+      
+      return c.json({
+        success: true,
+        question: question,
+        context: ragResult.context,
+        chunksUsed: ragResult.context.length,
+        message: 'تست RAG موفقیت‌آمیز بود'
+      });
+
+    } catch (error) {
+      console.error('Error in /api/rag/test:', error);
+      return c.json({ 
+        error: error.message || 'خطا در تست RAG' 
+      }, 500);
+    }
+  });
 
 }; 

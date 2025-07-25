@@ -32,6 +32,7 @@ app.get('/', (c) => {
                    rag: {
                upload: '/api/rag/upload (POST)',
                ask: '/api/rag/ask (POST)',
+               test: '/api/rag/test (POST)',
                files: '/api/rag/files (GET)',
                deleteFile: '/api/rag/files/:fileName (DELETE)'
              }
