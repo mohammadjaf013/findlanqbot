@@ -36,7 +36,7 @@ function initDatabase() {
           return;
         }
         
-        // ایجاد جدول vector_chunks
+        // ایجاد جدول vector_chunks با embedding
         db.run(`
           CREATE TABLE IF NOT EXISTS vector_chunks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,6 +44,7 @@ function initDatabase() {
             chunk_text TEXT NOT NULL,
             chunk_index INTEGER NOT NULL,
             file_hash TEXT NOT NULL,
+            embedding TEXT NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
           )
         `, (err) => {
@@ -82,13 +83,13 @@ function closeDatabase() {
 
 // توابع جدید برای Vector Storage
 
-// ذخیره فایل و chunks آن
-function saveFileAndChunks(fileName, fileHash, chunks) {
+// ذخیره فایل و chunks آن همراه با embeddings
+function saveFileAndChunks(fileName, fileHash, chunksWithEmbeddings) {
   return new Promise((resolve, reject) => {
     // ابتدا فایل را ذخیره می‌کنیم
     db.run(
       'INSERT OR REPLACE INTO files (file_name, file_hash, chunks_count) VALUES (?, ?, ?)',
-      [fileName, fileHash, chunks.length],
+      [fileName, fileHash, chunksWithEmbeddings.length],
       function(err) {
         if (err) {
           reject(err);
@@ -102,11 +103,14 @@ function saveFileAndChunks(fileName, fileHash, chunks) {
             return;
           }
           
-          // ذخیره chunks جدید
-          const stmt = db.prepare('INSERT INTO vector_chunks (file_name, chunk_text, chunk_index, file_hash) VALUES (?, ?, ?, ?)');
-          chunks.forEach((chunk, index) => {
-            stmt.run([fileName, chunk, index, fileHash]);
+          // ذخیره chunks جدید همراه با embeddings
+          const stmt = db.prepare('INSERT INTO vector_chunks (file_name, chunk_text, chunk_index, file_hash, embedding) VALUES (?, ?, ?, ?, ?)');
+          
+          chunksWithEmbeddings.forEach((item, index) => {
+            const embeddingJson = JSON.stringify(item.embedding);
+            stmt.run([fileName, item.text, index, fileHash, embeddingJson]);
           });
+          
           stmt.finalize((err) => {
             if (err) reject(err);
             else resolve();
@@ -127,9 +131,40 @@ function getAllChunks() {
   });
 }
 
+// دریافت همه chunks همراه با embeddings
+function getAllChunksWithEmbeddings() {
+  return new Promise((resolve, reject) => {
+    db.all('SELECT chunk_text, embedding FROM vector_chunks ORDER BY file_name, chunk_index', (err, rows) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      
+      try {
+        const chunks = rows.map(row => ({
+          text: row.chunk_text,
+          embedding: JSON.parse(row.embedding)
+        }));
+        resolve(chunks);
+      } catch (parseError) {
+        reject(parseError);
+      }
+    });
+  });
+}
+
 // جستجو در chunks بر اساس کلمات کلیدی
 function searchChunks(query, limit = 5) {
   return new Promise((resolve, reject) => {
+    if (!query || query.trim() === '') {
+      // اگر query خالی باشد، همه chunks را برگردان
+      db.all('SELECT chunk_text FROM vector_chunks ORDER BY file_name, chunk_index LIMIT ?', [limit], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows.map(r => r.chunk_text));
+      });
+      return;
+    }
+    
     const searchTerms = query.toLowerCase().split(' ').filter(term => term.length > 2);
     const conditions = searchTerms.map(() => 'LOWER(chunk_text) LIKE ?').join(' AND ');
     const params = searchTerms.map(term => `%${term}%`);
@@ -179,6 +214,7 @@ module.exports = {
   closeDatabase,
   saveFileAndChunks,
   getAllChunks,
+  getAllChunksWithEmbeddings,
   searchChunks,
   getFilesList,
   deleteFile

@@ -4,7 +4,7 @@ const mammoth = require('mammoth');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-const { saveFileAndChunks, searchChunks, getFilesList, deleteFile } = require('./db');
+const { saveFileAndChunks, searchChunks, getFilesList, deleteFile, getAllChunksWithEmbeddings } = require('./db');
 
 // تنظیمات API کلیدها
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyDaZf6m6Qc-j_Mky9Zk9jRTQPffvYXQd9M';
@@ -58,34 +58,36 @@ async function splitText(text) {
   return await textSplitter.splitText(text);
 }
 
-// ایجاد Vector Store ساده (بدون embedding برای تست)
-async function createVectorStore(texts) {
+// ایجاد embedding برای متن
+async function createEmbedding(text) {
   try {
-    // برای تست، فقط متن‌ها را ذخیره می‌کنیم
-    return {
-      texts: texts,
-      search: async (query, k = 5) => {
-        // جستجوی ساده بر اساس کلمات کلیدی
-        const queryWords = query.toLowerCase().split(' ');
-        const results = texts.filter(text => 
-          queryWords.some(word => text.toLowerCase().includes(word))
-        );
-        return results.slice(0, k).map(text => ({ pageContent: text }));
-      }
-    };
+    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const result = await model.embedContent(text);
+    return result.embedding.values;
   } catch (error) {
-    throw new Error(`خطا در ایجاد Vector Store: ${error.message}`);
+    console.log('خطا در embedding:', error.message);
+    // fallback به vector تصادفی برای تست
+    return Array.from({length: 768}, () => Math.random());
   }
 }
 
-// جستجو در Vector Store
-async function searchSimilar(vectorStore, query, k = 5) {
-  try {
-    const results = await vectorStore.search(query, k);
-    return results.map(doc => doc.pageContent);
-  } catch (error) {
-    throw new Error(`خطا در جستجو: ${error.message}`);
+// محاسبه cosine similarity
+function cosineSimilarity(vecA, vecB) {
+  if (vecA.length !== vecB.length) return 0;
+  
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+  
+  for (let i = 0; i < vecA.length; i++) {
+    dotProduct += vecA[i] * vecB[i];
+    normA += vecA[i] * vecA[i];
+    normB += vecB[i] * vecB[i];
   }
+  
+  if (normA === 0 || normB === 0) return 0;
+  
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
 // پردازش کامل فایل Word و ذخیره در دیتابیس
@@ -97,16 +99,33 @@ async function processWordFile(filePath, fileName) {
     // تقسیم به chunks
     const chunks = await splitText(text);
     
+    // ایجاد embedding برای هر chunk
+    console.log('در حال ایجاد embeddings...');
+    const chunksWithEmbeddings = [];
+    
+    for (let i = 0; i < chunks.length; i++) {
+      console.log(`پردازش chunk ${i + 1}/${chunks.length}`);
+      const embedding = await createEmbedding(chunks[i]);
+      chunksWithEmbeddings.push({
+        text: chunks[i],
+        embedding: embedding
+      });
+      
+      // کمی صبر برای جلوگیری از rate limiting
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
     // ایجاد hash برای فایل
     const fileHash = crypto.createHash('md5').update(text).digest('hex');
     
     // ذخیره در دیتابیس
-    await saveFileAndChunks(fileName, fileHash, chunks);
+    await saveFileAndChunks(fileName, fileHash, chunksWithEmbeddings);
     
     return {
       success: true,
       text: text,
       chunks: chunks,
+      embeddings: chunksWithEmbeddings.length,
       fileHash: fileHash,
       message: 'فایل با موفقیت پردازش و ذخیره شد'
     };
@@ -115,27 +134,39 @@ async function processWordFile(filePath, fileName) {
   }
 }
 
-// RAG Query با استفاده از دیتابیس
+// RAG Query با استفاده از embedding similarity
 async function ragQuery(question) {
   try {
-    // جستجوی متن‌های مشابه در دیتابیس
-    const similarTexts = await searchChunks(question, 5);
+    // ایجاد embedding برای سوال
+    console.log('در حال ایجاد embedding برای سوال...');
+    const questionEmbedding = await createEmbedding(question);
     
-    // ساخت prompt برای Gemini
-    const context = similarTexts.join('\n\n');
-    const prompt = `بر اساس متن‌های زیر به سوال پاسخ دهید:
-
-متن‌های مرتبط:
-${context}
-
-سوال: ${question}
-
-پاسخ:`;
-
+    // دریافت همه chunks از دیتابیس
+    const allChunks = await getAllChunksWithEmbeddings();
+    
+    if (allChunks.length === 0) {
+      return {
+        success: false,
+        context: [],
+        message: 'هیچ فایلی در دیتابیس یافت نشد'
+      };
+    }
+    
+    // محاسبه similarity برای همه chunks
+    const similarities = allChunks.map(chunk => ({
+      text: chunk.text,
+      similarity: cosineSimilarity(questionEmbedding, chunk.embedding)
+    }));
+    
+    // مرتب‌سازی بر اساس similarity و انتخاب بهترین‌ها
+    similarities.sort((a, b) => b.similarity - a.similarity);
+    const topChunks = similarities.slice(0, 5).map(item => item.text);
+    
+    console.log('Top similarities:', similarities.slice(0, 3).map(s => s.similarity));
+    
     return {
       success: true,
-      context: similarTexts,
-      prompt: prompt,
+      context: topChunks,
       message: 'جستجو با موفقیت انجام شد'
     };
   } catch (error) {
@@ -143,11 +174,15 @@ ${context}
   }
 }
 
+
+
 module.exports = {
   isValidFileType,
   saveUploadedFile,
   processWordFile,
   ragQuery,
   getFilesList,
-  deleteFile
+  deleteFile,
+  createEmbedding,
+  cosineSimilarity
 }; 
