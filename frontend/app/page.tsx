@@ -1,164 +1,56 @@
-'use client'
-
-import { useState } from 'react'
-import axios from 'axios'
-import { Send, Bot, User, Loader2 } from 'lucide-react'
-
-interface Message {
-  id: string
-  type: 'user' | 'bot'
-  content: string
-  timestamp: Date
-}
+import Link from 'next/link';
+import { ArrowLeft, MessageCircle, FileText, Globe } from 'lucide-react';
 
 export default function Home() {
-  const [question, setQuestion] = useState('')
-  const [messages, setMessages] = useState<Message[]>([])
-  const [loading, setLoading] = useState(false)
-
-  const API_URL =  'https://laughing-space-umbrella-q7xwqx9rpqcx9g9-3001.app.github.dev' //process.env.NEXT_PUBLIC_API_URL ||
-
-  const sendQuestion = async () => {
-    if (!question.trim() || loading) return
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: question.trim(),
-      timestamp: new Date()
-    }
-
-    setMessages(prev => [...prev, userMessage])
-    setQuestion('')
-    setLoading(true)
-
-    try {
-      const response = await axios.post(`${API_URL}/api/ask`, {
-        question: question.trim()
-      })
-
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'bot',
-        content: response.data.answer,
-        timestamp: new Date()
-      }
-
-      setMessages(prev => [...prev, botMessage])
-    } catch (error: any) {
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'bot',
-        content: error.response?.data?.error || 'خطا در ارتباط با سرور',
-        timestamp: new Date()
-      }
-      setMessages(prev => [...prev, errorMessage])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      sendQuestion()
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            FindLanQBot
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center" dir="rtl">
+      <div className="max-w-4xl mx-auto px-4 text-center">
+        <div className="mb-8">
+          <div className="w-20 h-20 bg-gradient-to-r from-[#4385f6] to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Globe className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-[#4385f6] to-blue-600 bg-clip-text text-transparent mb-4">
+            فنلاند کیو
           </h1>
-          <p className="text-gray-600">
-            پلتفرم چت هوش مصنوعی با قابلیت پاسخ بر اساس اسناد موجود
+          <p className="text-xl text-gray-600 mb-8">
+            دستیار هوشمند مهاجرت به فنلاند
           </p>
         </div>
-
-        {/* Chat Container */}
-        <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
-          {/* Messages */}
-          <div className="h-96 overflow-y-auto p-6 space-y-4">
-            {messages.length === 0 ? (
-              <div className="text-center text-gray-500 py-8">
-                <Bot className="mx-auto h-12 w-12 mb-4 text-gray-400" />
-                <p>سوال خود را بپرسید تا پاسخ دریافت کنید</p>
-              </div>
-            ) : (
-              messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                      message.type === 'user'
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    <div className="flex items-start gap-2">
-                      {message.type === 'bot' && (
-                        <Bot className="h-4 w-4 mt-1 flex-shrink-0" />
-                      )}
-                      <div className="flex-1">
-                        <p className="text-sm">{message.content}</p>
-                        <p className="text-xs opacity-70 mt-1">
-                          {message.timestamp.toLocaleTimeString('fa-IR')}
-                        </p>
-                      </div>
-                      {message.type === 'user' && (
-                        <User className="h-4 w-4 mt-1 flex-shrink-0" />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-            
-            {loading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 text-gray-800 max-w-xs lg:max-w-md px-4 py-2 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm">در حال پردازش...</span>
-                  </div>
-                </div>
-              </div>
-            )}
+        
+        <div className="grid md:grid-cols-3 gap-6 mb-10">
+          <div className="bg-white p-6 rounded-2xl shadow-lg border border-blue-100">
+            <MessageCircle className="w-12 h-12 text-[#4385f6] mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">چت هوشمند</h3>
+            <p className="text-gray-600 text-sm">پاسخ سریع به سوالات مهاجرت، تحصیل و کار</p>
           </div>
-
-          {/* Input */}
-          <div className="border-t p-4">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="سوال خود را بنویسید..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                disabled={loading}
-              />
-              <button
-                onClick={sendQuestion}
-                disabled={loading || !question.trim()}
-                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-                ارسال
-              </button>
-            </div>
+          
+          <div className="bg-white p-6 rounded-2xl shadow-lg border border-blue-100">
+            <FileText className="w-12 h-12 text-[#4385f6] mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">آپلود اسناد</h3>
+            <p className="text-gray-600 text-sm">بارگذاری مدارک و دریافت راهنمایی دقیق</p>
+          </div>
+          
+          <div className="bg-white p-6 rounded-2xl shadow-lg border border-blue-100">
+            <Globe className="w-12 h-12 text-[#4385f6] mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">اطلاعات کامل</h3>
+            <p className="text-gray-600 text-sm">راهنمای جامع زندگی در فنلاند</p>
           </div>
         </div>
+        
+        <Link 
+          href="/finlandq"
+          className="inline-flex items-center gap-3 bg-gradient-to-r from-[#4385f6] to-blue-600 text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:shadow-lg transition-all duration-200 group"
+        >
+          شروع چت
+          <ArrowLeft className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+        </Link>
+        
+        <div className="mt-12 text-center">
+          <p className="text-gray-500 text-sm">
+            برای پشتیبانی: 88888888
+          </p>
+        </div>
       </div>
-    </div>
+    </main>
   )
 } 
