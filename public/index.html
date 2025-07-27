@@ -62,8 +62,8 @@
         </div>
         
         <div class="endpoint">
-            <strong>POST /api/rag/upload</strong> - Upload Word Files via Base64 (Max 2MB)
-            <br><small>Send JSON: {"fileName": "doc.docx", "fileData": "base64...", "fileType": "application/vnd..."}</small>
+            <strong>POST /api/rag/upload</strong> - Upload Word Files (Max 2MB)
+            <br><small>Send multipart/form-data with field name "file"</small>
         </div>
         
         <div class="endpoint">

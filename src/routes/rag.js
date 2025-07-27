@@ -3,6 +3,52 @@ const { askGemini } = require('../services/ai');
 const fs = require('fs');
 
 module.exports = (app) => {
+  // راهنمای استفاده از file upload
+  app.get('/api/rag/upload-help', async (c) => {
+    return c.json({
+      title: 'راهنمای آپلود فایل',
+      description: 'برای آپلود فایل Word، باید فایل را به Base64 تبدیل کنید',
+      method: 'POST',
+      endpoint: '/api/rag/upload',
+      contentType: 'application/json',
+      bodyFormat: {
+        fileName: 'نام فایل با پسوند (مثال: document.docx)',
+        fileData: 'محتوای فایل به فرمت Base64',
+        fileType: 'نوع فایل (اختیاری)'
+      },
+      example: {
+        fileName: 'sample.docx',
+        fileData: 'UEsDBBQAAAAIAAwAAABhPpY...(base64 data here)',
+        fileType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      },
+      jsExample: `
+// JavaScript example
+const fileInput = document.getElementById('fileInput');
+const file = fileInput.files[0];
+
+const reader = new FileReader();
+reader.onload = function(e) {
+  const base64Data = e.target.result;
+  
+  fetch('/api/rag/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fileName: file.name,
+      fileData: base64Data,
+      fileType: file.type
+    })
+  });
+};
+reader.readAsDataURL(file);`,
+      limitations: [
+        'حداکثر سایز فایل: 2MB',
+        'فقط فایل‌های Word (.doc, .docx) پذیرفته می‌شود',
+        'فایل به صورت Base64 encode شده باید ارسال شود'
+      ]
+    });
+  });
+
   // آپلود متن مستقیم به جای فایل
   app.post('/api/rag/upload-text', async (c) => {
     try {
@@ -51,78 +97,93 @@ module.exports = (app) => {
     }
   });
 
-  // آپلود فایل با Base64 encoding
+  // آپلود فایل مستقیم با formidable
   app.post('/api/rag/upload', async (c) => {
-    console.log('upload started');
-    try {
-      const { fileName, fileData, fileType } = await c.req.json();
-      
-      if (!fileName || !fileData) {
-        return c.json({ 
-          error: 'نام فایل و داده فایل الزامی است',
-          usage: 'ارسال JSON با فیلدهای fileName, fileData (base64), fileType'
-        }, 400);
-      }
-
-      // بررسی نوع فایل
-      if (!isValidFileType(fileName)) {
-        return c.json({ 
-          error: 'فقط فایل‌های Word (.docx, .doc) مجاز هستند' 
-        }, 400);
-      }
-
-      // تبدیل Base64 به buffer
-      let buffer;
-      try {
-        const base64Data = fileData.replace(/^data:.*,/, ''); // حذف data URL prefix
-        buffer = Buffer.from(base64Data, 'base64');
-      } catch (error) {
-        return c.json({ 
-          error: 'فرمت Base64 نامعتبر است' 
-        }, 400);
-      }
-
-      // بررسی اندازه فایل (2MB برای Vercel)
-      if (buffer.length > 50 * 1024 * 1024) {
-        return c.json({ 
-          error: 'حجم فایل نباید بیشتر از 2MB باشد (محدودیت Vercel)' 
-        }, 400);
-      }
-
-      console.log('File info:', {
-        name: fileName,
-        size: buffer.length,
-        type: fileType
-      });
-      
-      // ذخیره موقت در /tmp
-      const tempPath = `/tmp/upload_${Date.now()}_${fileName}`;
+    console.log('File upload started');
+    
+    return new Promise((resolve) => {
+      const formidable = require('formidable');
       const fs = require('fs');
-      fs.writeFileSync(tempPath, buffer);
+      // دسترسی به raw Node.js request
+      const req = c.req.raw || c.env?.incoming || c.req;
       
-      console.log('File saved to:', tempPath);
+      console.log('Request method:', req.method);
+      console.log('Content-Type:', req.headers['content-type']);
       
-      // پردازش فایل
-      const result = await processWordFile(tempPath, fileName);
-
-      // حذف فایل موقت
-      fs.unlinkSync(tempPath);
-
-      return c.json({
-        success: true,
-        fileName: fileName,
-        chunksCount: result.chunks.length,
-        fileHash: result.fileHash,
-        message: 'فایل با موفقیت آپلود و در دیتابیس ذخیره شد'
+      const form = formidable({
+        uploadDir: '/tmp',
+        keepExtensions: true,
+        maxFileSize: 2 * 1024 * 1024, // 2MB
+        maxFiles: 1,
+        allowEmptyFiles: false,
+        minFileSize: 1
       });
 
-    } catch (error) {
-      console.error('Error in /api/rag/upload:', error);
-      return c.json({ 
-        error: error.message || 'خطا در پردازش فایل',
-        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      }, 500);
-    }
+      form.parse(req, async (err, fields, files) => {
+        try {
+          if (err) {
+            console.error('Formidable parsing error:', err);
+            resolve(c.json({ 
+              error: 'خطا در پردازش فایل: ' + err.message 
+            }, 400));
+            return;
+          }
+
+          console.log('Parsed files:', Object.keys(files));
+          console.log('Parsed fields:', Object.keys(fields));
+
+          const file = files.file;
+          if (!file) {
+            resolve(c.json({ 
+              error: 'فایل انتخاب نشده است. از field name "file" استفاده کنید.' 
+            }, 400));
+            return;
+          }
+
+          // Handle array of files (formidable v3 returns arrays)
+          const fileObj = Array.isArray(file) ? file[0] : file;
+          const fileName = fileObj.originalFilename || fileObj.name;
+          const filePath = fileObj.filepath || fileObj.path;
+
+          console.log('Processing file:', {
+            name: fileName,
+            path: filePath,
+            size: fileObj.size,
+            type: fileObj.mimetype || fileObj.type
+          });
+
+          // بررسی نوع فایل
+          if (!isValidFileType(fileName)) {
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+            resolve(c.json({ 
+              error: 'فقط فایل‌های Word (.docx, .doc) مجاز هستند' 
+            }, 400));
+            return;
+          }
+
+          // پردازش فایل
+          const result = await processWordFile(filePath, fileName);
+
+          // حذف فایل موقت
+          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+          resolve(c.json({
+            success: true,
+            fileName: fileName,
+            chunksCount: result.chunks.length,
+            fileHash: result.fileHash,
+            message: 'فایل با موفقیت آپلود و در دیتابیس ذخیره شد'
+          }));
+
+        } catch (error) {
+          console.error('Error processing uploaded file:', error);
+          resolve(c.json({ 
+            error: error.message || 'خطا در پردازش فایل',
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+          }, 500));
+        }
+      });
+    });
   });
 
   // پرسش از همه فایل‌های ذخیره شده

@@ -28,7 +28,8 @@
     "langchain": "^0.3.30",
     "mammoth": "^1.9.1",
     "sqlite3": "^5.1.6",
-    "busboy": "^1.6.0"
+    "busboy": "^1.6.0",
+    "formidable": "^3.5.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
