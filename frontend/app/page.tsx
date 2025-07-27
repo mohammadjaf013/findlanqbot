@@ -37,7 +37,7 @@ export default function Home() {
           </div>
         </div>
         
-        <div className="flex gap-4 justify-center">
+        <div className="flex flex-wrap gap-4 justify-center">
           <Link 
             href="/finlandq"
             className="inline-flex items-center gap-3 bg-gradient-to-r from-[#4385f6] to-blue-600 text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:shadow-lg transition-all duration-200 group"
@@ -48,10 +48,20 @@ export default function Home() {
           
           <Link 
             href="/upload"
-            className="inline-flex items-center gap-3 bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:shadow-lg transition-all duration-200 group"
+            className="inline-flex items-center gap-3 bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4 rounded-2xl text-lg font-semibold hover:shadow-lg transition-all duration-200 group"
           >
             آپلود فایل
             <FileText className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          </Link>
+          
+          <Link 
+            href="/upload-text"
+            className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-4 rounded-2xl text-lg font-semibold hover:shadow-lg transition-all duration-200 group"
+          >
+            آپلود متن
+            <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
           </Link>
         </div>
         

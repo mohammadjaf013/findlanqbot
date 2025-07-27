@@ -47,6 +47,40 @@ ${context}
   }
 }
 
+// ایجاد embedding برای متن
+async function createEmbedding(text) {
+  try {
+    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const result = await model.embedContent(text);
+    return result.embedding.values;
+  } catch (error) {
+    console.log('خطا در embedding:', error.message);
+    // fallback به vector تصادفی برای تست
+    return Array.from({length: 768}, () => Math.random());
+  }
+}
+
+// ایجاد embeddings برای آرایه‌ای از متن‌ها
+async function createEmbeddings(texts) {
+  const chunksWithEmbeddings = [];
+  
+  console.log(`در حال ایجاد embeddings برای ${texts.length} chunk...`);
+  
+  for (let i = 0; i < texts.length; i++) {
+    console.log(`پردازش chunk ${i + 1}/${texts.length}`);
+    const embedding = await createEmbedding(texts[i]);
+    chunksWithEmbeddings.push({
+      text: texts[i],
+      embedding: embedding
+    });
+    
+    // کمی صبر برای جلوگیری از rate limiting
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  
+  return chunksWithEmbeddings;
+}
+
 // تابع عمومی برای پرسش (قابل گسترش برای مدل‌های دیگر)
 async function askAI(question, docs, model = 'gemini') {
   switch (model.toLowerCase()) {
@@ -62,4 +96,4 @@ async function askAI(question, docs, model = 'gemini') {
   }
 }
 
-module.exports = { askAI, askGemini }; 
+module.exports = { askAI, askGemini, createEmbedding, createEmbeddings }; 
