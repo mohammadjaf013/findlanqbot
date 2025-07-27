@@ -17,4 +17,14 @@ data/
 README.md
 SETUP.md
 test-*.txt
-frontend/ 
+frontend/
+
+# Next.js specific files (prevent Next.js detection)
+next.config.js
+next-env.d.ts
+.next/
+pages/
+components/
+styles/
+tailwind.config.js
+postcss.config.js 
