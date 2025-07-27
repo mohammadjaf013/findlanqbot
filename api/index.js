@@ -47,23 +47,8 @@ app.use('*', async (c, next) => {
 // File upload middleware - disabled, using Hono's built-in formData
 // app.use('*', fileUploadMiddleware());
 
-// روت اصلی - HTML response
+// روت اصلی
 app.get('/', (c) => {
-  const fs = require('fs');
-  const path = require('path');
-  
-  try {
-    // Try to read from public/index.html if exists
-    const indexPath = path.join(process.cwd(), 'public', 'index.html');
-    if (fs.existsSync(indexPath)) {
-      const html = fs.readFileSync(indexPath, 'utf8');
-      return c.html(html);
-    }
-  } catch (error) {
-    console.log('Could not read public/index.html:', error.message);
-  }
-  
-  // Fallback to JSON
   return c.json({
     message: 'FindLanQBot API',
     version: '1.0.0',
