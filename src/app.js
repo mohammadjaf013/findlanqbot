@@ -67,13 +67,5 @@ async function init() {
 
 init();
 
-// برای Vercel
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = app;
-} else {
-  // برای Bun، export با پورت
-  export default {
-    port,
-    fetch: app.fetch
-  };
-} 
+// Export for different environments
+module.exports = app; 

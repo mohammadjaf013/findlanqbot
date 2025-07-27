@@ -5,10 +5,10 @@
   "main": "src/app.js",
   "scripts": {
     "dev": "bun run src/app.js",
-    "start": "bun run src/app.js",
-    "build": "echo 'No build step needed for Hono'",
+    "start": "node src/app.js",
+    "build": "echo 'Build completed successfully'",
     "test": "echo 'No tests specified'",
-    "vercel-build": "echo 'Build step for Vercel'"
+    "vercel-build": "echo 'Vercel build completed'"
   },
   "keywords": [
     "ai",

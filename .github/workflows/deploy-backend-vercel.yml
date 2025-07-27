@@ -27,7 +27,7 @@ jobs:
         run: bun install
 
       - name: Build project (if needed)
-        run: bun run build
+        run: bun run vercel-build
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
