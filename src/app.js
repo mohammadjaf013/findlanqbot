@@ -56,7 +56,7 @@ app.onError((err, c) => {
   }, 500);
 });
 
-// راه‌اندازی دیتابیس در شروع
+// راه‌اندازی دیتابیس در شروع (فقط برای local development)
 async function init() {
   try {
     await initDatabase();
@@ -68,7 +68,10 @@ async function init() {
   }
 }
 
-init();
+// فقط اگر مستقیماً اجرا شده باشد، نه به عنوان module
+if (require.main === module) {
+  init();
+}
 
 // Export for different environments
 module.exports = app; 
