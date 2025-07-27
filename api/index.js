@@ -44,8 +44,8 @@ app.use('*', async (c, next) => {
   await next();
 });
 
-// File upload middleware
-app.use('*', fileUploadMiddleware());
+// File upload middleware - disabled, using Hono's built-in formData
+// app.use('*', fileUploadMiddleware());
 
 // روت اصلی
 app.get('/', (c) => {

@@ -51,20 +51,72 @@ module.exports = (app) => {
     }
   });
 
-  // آپلود و پردازش فایل Word - موقتاً غیرفعال برای Vercel
+  // آپلود و پردازش فایل Word
   app.post('/api/rag/upload', async (c) => {
-    return c.json({ 
-      error: 'آپلود فایل در Vercel محدودیت دارد. لطفاً از روش متنی استفاده کنید.',
-      suggestion: 'از endpoint /api/rag/upload-text برای اضافه کردن محتوای متنی استفاده کنید.',
-      example: {
-        endpoint: '/api/rag/upload-text',
-        method: 'POST',
-        body: {
-          title: 'عنوان محتوا (اختیاری)',
-          content: 'متن شما...'
-        }
+    console.log('upload started');
+    try {
+      // مستقیماً از Hono formData استفاده می‌کنیم
+      const formData = await c.req.formData();
+      const file = formData.get('file');
+      
+      if (!file) {
+        return c.json({ 
+          error: 'فایل انتخاب نشده است' 
+        }, 400);
       }
-    }, 501);
+
+      console.log('File info:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+
+      // بررسی نوع فایل
+      if (!isValidFileType(file.name)) {
+        return c.json({ 
+          error: 'فقط فایل‌های Word (.docx, .doc) مجاز هستند' 
+        }, 400);
+      }
+
+      // بررسی اندازه فایل (2MB برای Vercel)
+      if (file.size > 2 * 1024 * 1024) {
+        return c.json({ 
+          error: 'حجم فایل نباید بیشتر از 2MB باشد (محدودیت Vercel)' 
+        }, 400);
+      }
+
+      // تبدیل File object به buffer
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      
+      // ذخیره موقت در /tmp
+      const tempPath = `/tmp/upload_${Date.now()}_${file.name}`;
+      const fs = require('fs');
+      fs.writeFileSync(tempPath, buffer);
+      
+      console.log('File saved to:', tempPath);
+      
+      // پردازش فایل
+      const result = await processWordFile(tempPath, file.name);
+
+      // حذف فایل موقت
+      fs.unlinkSync(tempPath);
+
+      return c.json({
+        success: true,
+        fileName: file.name,
+        chunksCount: result.chunks.length,
+        fileHash: result.fileHash,
+        message: 'فایل با موفقیت آپلود و در دیتابیس ذخیره شد'
+      });
+
+    } catch (error) {
+      console.error('Error in /api/rag/upload:', error);
+      return c.json({ 
+        error: error.message || 'خطا در پردازش فایل',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      }, 500);
+    }
   });
 
   // پرسش از همه فایل‌های ذخیره شده
