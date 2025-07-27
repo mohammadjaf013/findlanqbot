@@ -1,5 +1,8 @@
 const { isValidFileType, saveUploadedFile, processWordFile, ragQuery, getFilesList, deleteFile } = require('../services/rag');
 const { askGemini } = require('../services/ai');
+const { saveFileAndChunks } = process.env.TURSO_DATABASE_URL 
+  ? require('../services/turso-db') 
+  : require('../services/db');
 const fs = require('fs');
 
 module.exports = (app) => {
