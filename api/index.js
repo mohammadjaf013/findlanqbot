@@ -87,51 +87,54 @@ app.onError((err, c) => {
   }, 500);
 });
 
-// Custom Vercel handler for Hono with proper body handling
+// Export Hono app directly for Vercel
 module.exports = async (req, res) => {
   await ensureDbInitialized();
   
   try {
-    // Handle different content types
-    let body = null;
+    // Create a proper Request object
+    const url = `https://${req.headers.host}${req.url}`;
     
-          if (req.method === 'POST' || req.method === 'PUT') {
-        // For Vercel, we need to handle the raw body differently
-        body = req;
+    // Handle body for POST requests
+    let body = undefined;
+    if (req.method === 'POST' || req.method === 'PUT') {
+      if (req.body) {
+        if (typeof req.body === 'string') {
+          body = req.body;
+        } else {
+          body = JSON.stringify(req.body);
+        }
       }
+    }
     
-    // Create URL
-    const protocol = req.headers['x-forwarded-proto'] || 'https';
-    const host = req.headers.host;
-    const url = `${protocol}://${host}${req.url}`;
-    
-    // Create request object
+    // Create Web API Request
     const request = new Request(url, {
       method: req.method,
-      headers: req.headers,
-      body: body
+      headers: new Headers(req.headers),
+      body: body,
+      ...(body && { duplex: 'half' })
     });
     
+    // Call Hono
     const response = await app.fetch(request);
     
-    // Set status
+    // Set response
     res.status(response.status);
     
     // Set headers
-    for (const [key, value] of response.headers.entries()) {
+    response.headers.forEach((value, key) => {
       res.setHeader(key, value);
-    }
+    });
     
-    // Send response
+    // Send body
     const text = await response.text();
-    res.send(text);
+    res.end(text);
     
   } catch (error) {
     console.error('Vercel handler error:', error);
     res.status(500).json({ 
       error: 'Internal server error', 
-      message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      message: error.message
     });
   }
 }; 
