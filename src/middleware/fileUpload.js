@@ -31,10 +31,20 @@ function parseMultipart(req) {
     const fields = {};
     const files = {};
     
+    // Get headers from the right place
+    const headers = req.headers || req.raw?.headers || {};
+    
+    console.log('Headers for busboy:', headers);
+    
+    if (!headers['content-type']) {
+      reject(new Error('Content-Type header missing'));
+      return;
+    }
+    
     const busboy = Busboy({ 
-      headers: req.headers,
+      headers: headers,
       limits: {
-        fileSize: 4 * 1024 * 1024, // 4MB limit for Vercel
+        fileSize: 2 * 1024 * 1024, // 2MB limit for safer Vercel deployment
         files: 1
       }
     });
@@ -84,7 +94,13 @@ function parseMultipart(req) {
     });
     
     // Pipe request to busboy
-    req.pipe(busboy);
+    if (req.pipe) {
+      req.pipe(busboy);
+    } else if (req.raw && req.raw.pipe) {
+      req.raw.pipe(busboy);
+    } else {
+      reject(new Error('Cannot pipe request to busboy'));
+    }
   });
 }
 

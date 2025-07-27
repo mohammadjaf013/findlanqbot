@@ -3,58 +3,68 @@ const { askGemini } = require('../services/ai');
 const fs = require('fs');
 
 module.exports = (app) => {
-  // آپلود و پردازش فایل Word
-  app.post('/api/rag/upload', async (c) => {
-    console.log('upload')
+  // آپلود متن مستقیم به جای فایل
+  app.post('/api/rag/upload-text', async (c) => {
     try {
-      // Get parsed form data from middleware
-      const parsedData = c.get('formData');
+      const { content, title } = await c.req.json();
       
-      if (!parsedData || !parsedData.files || !parsedData.files.file) {
+      if (!content || content.trim() === '') {
         return c.json({ 
-          error: 'فایل انتخاب نشده است' 
-        }, 400);
-      }
-      
-      const file = parsedData.files.file;
-
-      // بررسی نوع فایل
-      if (!isValidFileType(file.name)) {
-        return c.json({ 
-          error: 'فقط فایل‌های Word (.docx, .doc) مجاز هستند' 
+          error: 'محتوای متن الزامی است' 
         }, 400);
       }
 
-      // بررسی اندازه فایل (4MB برای Vercel)
-      if (file.size > 4 * 1024 * 1024) {
+      const fileName = title || `text_${Date.now()}.txt`;
+      
+      // تقسیم متن به chunks
+      const chunks = content.split('\n\n').filter(chunk => chunk.trim().length > 0);
+      
+      if (chunks.length === 0) {
         return c.json({ 
-          error: 'حجم فایل نباید بیشتر از 4MB باشد (محدودیت Vercel)' 
+          error: 'محتوای معتبر یافت نشد' 
         }, 400);
       }
 
-      // فایل قبلاً در middleware save شده
-      const filePath = file.tempPath;
-      
-      // پردازش فایل و ذخیره در دیتابیس
-      const result = await processWordFile(filePath, file.name);
+      // ایجاد hash برای فایل
+      const crypto = require('crypto');
+      const fileHash = crypto.createHash('md5').update(content).digest('hex');
 
-      // حذف فایل موقت
-      fs.unlinkSync(filePath);
+      // ایجاد embeddings و ذخیره
+      const { createEmbeddings } = require('../services/ai');
+      const chunksWithEmbeddings = await createEmbeddings(chunks);
+      
+      await saveFileAndChunks(fileName, fileHash, chunksWithEmbeddings);
 
       return c.json({
         success: true,
-        fileName: file.name,
-        chunksCount: result.chunks.length,
-        fileHash: result.fileHash,
-        message: 'فایل با موفقیت آپلود و در دیتابیس ذخیره شد'
+        fileName: fileName,
+        chunksCount: chunks.length,
+        fileHash: fileHash,
+        message: 'محتوای متنی با موفقیت پردازش و ذخیره شد'
       });
 
     } catch (error) {
-      console.error('Error in /api/rag/upload:', error);
+      console.error('Error in /api/rag/upload-text:', error);
       return c.json({ 
-        error: error.message || 'خطا در پردازش فایل' 
+        error: error.message || 'خطا در پردازش محتوای متنی' 
       }, 500);
     }
+  });
+
+  // آپلود و پردازش فایل Word - موقتاً غیرفعال برای Vercel
+  app.post('/api/rag/upload', async (c) => {
+    return c.json({ 
+      error: 'آپلود فایل در Vercel محدودیت دارد. لطفاً از روش متنی استفاده کنید.',
+      suggestion: 'از endpoint /api/rag/upload-text برای اضافه کردن محتوای متنی استفاده کنید.',
+      example: {
+        endpoint: '/api/rag/upload-text',
+        method: 'POST',
+        body: {
+          title: 'عنوان محتوا (اختیاری)',
+          content: 'متن شما...'
+        }
+      }
+    }, 501);
   });
 
   // پرسش از همه فایل‌های ذخیره شده
