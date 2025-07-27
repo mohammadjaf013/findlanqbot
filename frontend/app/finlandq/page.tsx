@@ -78,16 +78,21 @@ function QuickReplyOptions({ question, onSelect, isLoading }: {
     
     return (
       <div className="space-y-2">
-        <div className={`grid ${gridCols} gap-2`}>
-          {question.options.map((option: any) => (
-            <button
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {question.options.map((option: any, index: number) => (
+            <motion.button
               key={typeof option === 'string' ? option : option.value}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => handleOptionClick(typeof option === 'string' ? option : option.value)}
               disabled={isLoading}
-              className="text-right p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors disabled:opacity-50 text-gray-800"
+              className="text-right p-2 sm:p-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border border-blue-200 rounded-lg transition-all duration-300 disabled:opacity-50 text-gray-800 text-sm sm:text-base shadow-sm hover:shadow-md"
             >
               {typeof option === 'string' ? option : option.label}
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
@@ -98,20 +103,25 @@ function QuickReplyOptions({ question, onSelect, isLoading }: {
   if (question.options && question.multiple) {
     return (
       <div className="space-y-3">
-        <div className="grid grid-cols-2 gap-2">
-          {question.options.map((option: any) => (
-            <button
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {question.options.map((option: any, index: number) => (
+            <motion.button
               key={option.value}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => handleOptionClick(option.value)}
               disabled={isLoading}
-              className={`text-right p-3 border rounded-lg transition-colors disabled:opacity-50 ${
+              className={`text-right p-2 sm:p-3 border rounded-lg transition-all duration-300 disabled:opacity-50 text-sm sm:text-base shadow-sm hover:shadow-md ${
                 selectedOptions.includes(option.value)
-                  ? 'bg-[#4385f6] text-white border-[#4385f6]'
-                  : 'bg-blue-50 hover:bg-blue-100 border-blue-200 text-gray-800'
+                  ? 'bg-gradient-to-r from-[#4385f6] to-blue-600 text-white border-[#4385f6] shadow-lg'
+                  : 'bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border-blue-200 text-gray-800'
               }`}
             >
               {option.label}
-            </button>
+            </motion.button>
           ))}
         </div>
         {selectedOptions.length > 0 && (
@@ -129,37 +139,49 @@ function QuickReplyOptions({ question, onSelect, isLoading }: {
 
   // ورودی متنی
   return (
-    <div className="flex gap-3">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex gap-2 sm:gap-3"
+    >
       <div className="flex-1 relative">
         {question.type === 'textarea' ? (
-          <textarea
+          <motion.textarea
+            initial={{ scale: 0.95 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.2 }}
             value={textInput}
             onChange={(e) => setTextInput(e.target.value)}
             placeholder="پاسخ خود را بنویسید..."
-            className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent"
+            className="w-full resize-none rounded-xl border border-gray-200 px-3 sm:px-4 py-2 sm:py-3 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent bg-white shadow-sm focus:shadow-md transition-all duration-300 text-sm sm:text-base"
             rows={3}
             disabled={isLoading}
           />
         ) : (
-          <input
+          <motion.input
+            initial={{ scale: 0.95 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.2 }}
             type={question.type || 'text'}
             value={textInput}
             onChange={(e) => setTextInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="پاسخ خود را بنویسید..."
-            className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent"
+            className="w-full rounded-xl border border-gray-200 px-3 sm:px-4 py-2 sm:py-3 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent bg-white shadow-sm focus:shadow-md transition-all duration-300 text-sm sm:text-base"
             disabled={isLoading}
           />
         )}
       </div>
-      <button
+      <motion.button
+        whileHover={{ scale: 1.05, y: -2 }}
+        whileTap={{ scale: 0.95 }}
         onClick={handleTextSubmit}
         disabled={!textInput.trim() || isLoading}
-        className="bg-gradient-to-r from-[#4385f6] to-blue-600 text-white p-3 rounded-xl hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="bg-gradient-to-r from-[#4385f6] to-blue-600 text-white p-2 sm:p-3 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
       >
-        <Send className="w-5 h-5" />
-      </button>
-    </div>
+        <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+      </motion.button>
+    </motion.div>
   );
 }
 
@@ -249,7 +271,7 @@ function ConsultationFormContent({ onClose, onSubmit }: { onClose: () => void; o
               <select
                 value={formData.salutationtype}
                 onChange={(e) => handleInputChange('salutationtype', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent bg-white"
                 required
               >
                 <option value="">انتخاب کنید</option>
@@ -265,7 +287,7 @@ function ConsultationFormContent({ onClose, onSubmit }: { onClose: () => void; o
                 type="text"
                 value={formData.first_name}
                 onChange={(e) => handleInputChange('first_name', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent bg-white"
                 required
               />
             </div>
@@ -276,7 +298,7 @@ function ConsultationFormContent({ onClose, onSubmit }: { onClose: () => void; o
                 type="text"
                 value={formData.last_name}
                 onChange={(e) => handleInputChange('last_name', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent bg-white"
                 required
               />
             </div>
@@ -290,7 +312,7 @@ function ConsultationFormContent({ onClose, onSubmit }: { onClose: () => void; o
                 type="number"
                 value={formData.age}
                 onChange={(e) => handleInputChange('age', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent bg-white"
                 required
               />
             </div>
@@ -301,7 +323,7 @@ function ConsultationFormContent({ onClose, onSubmit }: { onClose: () => void; o
                 type="text"
                 value={formData.city}
                 onChange={(e) => handleInputChange('city', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent bg-white"
                 required
               />
             </div>
@@ -315,7 +337,7 @@ function ConsultationFormContent({ onClose, onSubmit }: { onClose: () => void; o
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent bg-white"
                 required
               />
             </div>
@@ -326,7 +348,7 @@ function ConsultationFormContent({ onClose, onSubmit }: { onClose: () => void; o
                 type="tel"
                 value={formData.mobile}
                 onChange={(e) => handleInputChange('mobile', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent bg-white"
                 required
               />
             </div>
@@ -338,7 +360,7 @@ function ConsultationFormContent({ onClose, onSubmit }: { onClose: () => void; o
             <select
               value={formData.acquainted}
               onChange={(e) => handleInputChange('acquainted', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent bg-white"
               required
             >
               <option value="">انتخاب کنید</option>
@@ -366,7 +388,7 @@ function ConsultationFormContent({ onClose, onSubmit }: { onClose: () => void; o
                     onChange={() => handlePositionChange(option)}
                     className="w-4 h-4 text-[#4385f6] border-gray-300 rounded focus:ring-[#4385f6]"
                   />
-                  <span className="text-sm">
+                  <span className="text-sm text-gray-700">
                     {option === 'university' ? 'تحصیل' :
                      option === 'work' ? 'کار' :
                      option === 'startup' ? 'استارتاپ' :
@@ -384,7 +406,7 @@ function ConsultationFormContent({ onClose, onSubmit }: { onClose: () => void; o
               value={formData.message}
               onChange={(e) => handleInputChange('message', e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent resize-none bg-white"
               placeholder="توضیحات تکمیلی در مورد درخواست خود..."
               required
             />
@@ -434,6 +456,8 @@ export default function FinlandQPage() {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const scrollToBottom = () => {
@@ -514,15 +538,10 @@ export default function FinlandQPage() {
 
     // Check if user is requesting consultation
     if (isConsultationRequest(currentInput)) {
-      const consultationMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: '🎯 درخواست مشاوره شما دریافت شد! من الان فرم مشاوره را برای شما باز می‌کنم تا بتوانیم بهترین خدمات را ارائه دهیم.',
-        timestamp: new Date()
-      };
-      
-      setMessages(prev => [...prev, consultationMessage]);
       setIsLoading(false);
+      
+      // شروع streaming برای پیام مشاوره
+      simulateStreaming('🎯 درخواست مشاوره شما دریافت شد! من الان فرم مشاوره را برای شما باز می‌کنم تا بتوانیم بهترین خدمات را ارائه دهیم.');
       
       // Start consultation mode automatically
       setTimeout(() => {
@@ -530,15 +549,10 @@ export default function FinlandQPage() {
         setConsultationStep(-1);
         setConsultationData({});
         
-        const welcomeQuestion: Message = {
-          id: (Date.now() + 2).toString(),
-          type: 'assistant',
-          content: 'برای شروع من چند تا اطلاعات شما نیاز دارم که بهتر بتونم راهنماییتون کنم. اوکی هستید؟',
-          timestamp: new Date()
-        };
-        
-        setMessages(prev => [...prev, welcomeQuestion]);
-      }, 1000);
+        setTimeout(() => {
+          simulateStreaming('برای شروع من چند تا اطلاعات شما نیاز دارم که بهتر بتونم راهنماییتون کنم. اوکی هستید؟');
+        }, 1500);
+      }, 2000);
       
       return;
     }
@@ -557,30 +571,51 @@ export default function FinlandQPage() {
       const data = await response.json();
       
       if (data.success) {
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'assistant',
-          content: data.answer,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, assistantMessage]);
+        // استفاده از streaming به جای نمایش مستقیم
+        setIsLoading(false);
+        simulateStreaming(data.answer);
       } else {
         throw new Error(data.error || 'خطا در دریافت پاسخ');
       }
     } catch (error) {
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: 'متأسفم، خطایی رخ داده است. برای اطلاعات تکمیلی با پشتیبانی شماره 88888888 تماس بگیرید.',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
       setIsLoading(false);
+      simulateStreaming('متأسفم، خطایی رخ داده است. برای اطلاعات تکمیلی با پشتیبانی شماره 88888888 تماس بگیرید.');
     }
   };
 
 
+
+  // تابع شبیه‌سازی streaming (تایپ کردن تدریجی)
+  const simulateStreaming = (text: string) => {
+    setIsStreaming(true);
+    setStreamingMessage('');
+    
+    let index = 0;
+    const interval = setInterval(() => {
+      if (index < text.length) {
+        setStreamingMessage(prev => prev + text[index]);
+        index++;
+        
+        // Scroll to bottom
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 50);
+      } else {
+        clearInterval(interval);
+        setIsStreaming(false);
+        
+        // اضافه کردن پیام نهایی به لیست
+        const assistantMessage: Message = {
+          id: Date.now().toString(),
+          type: 'assistant',
+          content: text,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+        setStreamingMessage('');
+      }
+    }, 30); // سرعت تایپ (30ms بین هر کاراکتر)
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -1208,17 +1243,17 @@ export default function FinlandQPage() {
         </div>
       </motion.header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-8">
           
           {/* Sidebar */}
           <motion.div 
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="lg:col-span-1"
+            className="lg:col-span-1 order-2 lg:order-1"
           >
-            <div className="space-y-6">
+            <div className="space-y-4 lg:space-y-6">
               
               {/* Consultation Request */}
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-blue-100">
@@ -1297,43 +1332,55 @@ export default function FinlandQPage() {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="lg:col-span-3"
+            className="lg:col-span-3 order-1 lg:order-2"
           >
-            <div className="bg-white rounded-2xl shadow-xl border border-blue-100 h-[70vh] flex flex-col overflow-hidden">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-blue-100 h-[60vh] sm:h-[70vh] flex flex-col overflow-hidden">
               
               {/* Chat Header */}
-              <div className="bg-gradient-to-r from-[#4385f6] to-blue-600 p-4 text-white">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                    <MessageCircle className="w-5 h-5" />
-                  </div>
+              <motion.div 
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="bg-gradient-to-r from-[#4385f6] to-blue-600 p-3 sm:p-4 text-white"
+              >
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <motion.div 
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-full flex items-center justify-center"
+                  >
+                    <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </motion.div>
                   <div>
-                    <h2 className="font-semibold">چت با دستیار فنلاند کیو</h2>
-                    <p className="text-xs opacity-90">آماده پاسخگویی به سوالات شما</p>
+                    <h2 className="font-semibold text-sm sm:text-base">چت با دستیار فنلاند کیو</h2>
+                    <p className="text-xs opacity-90 hidden sm:block">آماده پاسخگویی به سوالات شما</p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4">
                 <AnimatePresence>
                   {messages.map((message) => (
                     <motion.div
                       key={message.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
+                      initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
                       className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
-                      <div className={`max-w-[80%] ${
-                        message.type === 'user' 
-                          ? 'bg-gradient-to-r from-[#4385f6] to-blue-600 text-white' 
-                          : 'bg-gray-100 text-gray-800'
-                      } rounded-2xl px-4 py-3 shadow-sm`}>
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                      <motion.div 
+                        whileHover={{ scale: 1.02 }}
+                        className={`max-w-[85%] sm:max-w-[80%] ${
+                          message.type === 'user' 
+                            ? 'bg-gradient-to-r from-[#4385f6] to-blue-600 text-white shadow-lg' 
+                            : 'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 shadow-md'
+                        } rounded-2xl px-3 sm:px-4 py-2 sm:py-3 transition-all duration-300`}
+                      >
+                        <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
                           {message.content}
                         </p>
-                        <p className={`text-xs mt-2 ${
+                        <p className={`text-xs mt-1 sm:mt-2 ${
                           message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
                         }`}>
                           {message.timestamp.toLocaleTimeString('fa-IR', { 
@@ -1341,27 +1388,51 @@ export default function FinlandQPage() {
                             minute: '2-digit' 
                           })}
                         </p>
-                      </div>
+                      </motion.div>
                     </motion.div>
                   ))}
                 </AnimatePresence>
                 
+                {/* Loading indicator */}
                 {isLoading && (
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="flex justify-start"
                   >
-                    <div className="bg-gray-100 rounded-2xl px-4 py-3 shadow-sm">
+                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl px-3 sm:px-4 py-2 sm:py-3 shadow-sm">
                       <div className="flex items-center gap-2">
                         <div className="flex gap-1">
                           <div className="w-2 h-2 bg-[#4385f6] rounded-full animate-bounce"></div>
                           <div className="w-2 h-2 bg-[#4385f6] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                           <div className="w-2 h-2 bg-[#4385f6] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                         </div>
-                        <span className="text-sm text-gray-600">در حال تایپ...</span>
+                        <span className="text-xs sm:text-sm text-gray-600">در حال تایپ...</span>
                       </div>
                     </div>
+                  </motion.div>
+                )}
+
+                {/* Streaming message */}
+                {isStreaming && streamingMessage && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="flex justify-start"
+                  >
+                    <motion.div className="max-w-[85%] sm:max-w-[80%] bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 shadow-md rounded-2xl px-3 sm:px-4 py-2 sm:py-3 transition-all duration-300">
+                      <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
+                        {streamingMessage}
+                        <motion.span
+                          animate={{ opacity: [1, 0] }}
+                          transition={{ duration: 0.8, repeat: Infinity }}
+                          className="inline-block w-2 h-4 bg-[#4385f6] ml-1"
+                        >
+                          |
+                        </motion.span>
+                      </p>
+                    </motion.div>
                   </motion.div>
                 )}
                 <div ref={messagesEndRef} />
@@ -1374,20 +1445,24 @@ export default function FinlandQPage() {
                     // مرحله تأیید - فقط گزینه‌های بله/خیر
                     <div className="space-y-2">
                       <div className="grid grid-cols-2 gap-2">
-                        <button
+                        <motion.button
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={() => handleConsultationAnswer('بله')}
                           disabled={isLoading}
-                          className="text-right p-3 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors disabled:opacity-50 text-gray-800"
+                          className="text-right p-2 sm:p-3 bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border border-green-200 rounded-lg transition-all duration-300 disabled:opacity-50 text-gray-800 text-sm sm:text-base shadow-sm hover:shadow-md"
                         >
                           بله، آماده‌ام ✅
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={() => handleConsultationAnswer('خیر')}
                           disabled={isLoading}
-                          className="text-right p-3 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors disabled:opacity-50 text-gray-800"
+                          className="text-right p-2 sm:p-3 bg-gradient-to-r from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 border border-red-200 rounded-lg transition-all duration-300 disabled:opacity-50 text-gray-800 text-sm sm:text-base shadow-sm hover:shadow-md"
                         >
                           فعلاً نه ❌
-                        </button>
+                        </motion.button>
                       </div>
                     </div>
                   ) : consultationStep >= 0 && consultationStep < consultationQuestions.length ? (
@@ -1403,29 +1478,36 @@ export default function FinlandQPage() {
 
               {/* Input */}
               {!isInConsultationMode && (
-                <div className="border-t border-gray-100 p-4">
-                  <div className="flex gap-3">
+                <motion.div 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  className="border-t border-gray-100 p-2 sm:p-4"
+                >
+                  <div className="flex gap-2 sm:gap-3">
                     <div className="flex-1 relative">
-                      <textarea
+                      <motion.textarea
+                        whileFocus={{ scale: 1.02 }}
                         value={inputMessage}
                         onChange={(e) => setInputMessage(e.target.value)}
                         onKeyPress={handleKeyPress}
                         placeholder="سوال خود را بپرسید..."
-                        className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent"
+                        className="w-full resize-none rounded-xl border border-gray-200 px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#4385f6] focus:border-transparent bg-white shadow-sm focus:shadow-md transition-all duration-300 text-sm sm:text-base"
                         rows={1}
                         disabled={isLoading}
                       />
-                      <Sparkles className="absolute right-3 top-3 w-5 h-5 text-[#4385f6]" />
+                      <Sparkles className="absolute right-2 sm:right-3 top-2 sm:top-3 w-4 h-4 sm:w-5 sm:h-5 text-[#4385f6]" />
                     </div>
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={sendMessage}
                       disabled={!inputMessage.trim() || isLoading}
-                      className="bg-gradient-to-r from-[#4385f6] to-blue-600 text-white p-3 rounded-xl hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-gradient-to-r from-[#4385f6] to-blue-600 text-white p-2 sm:p-3 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
                     >
-                      <Send className="w-5 h-5" />
-                    </button>
+                      <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </motion.button>
                   </div>
-                </div>
+                </motion.div>
               )}
             </div>
           </motion.div>
