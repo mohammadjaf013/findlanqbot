@@ -97,7 +97,9 @@ reader.readAsDataURL(file);`,
     }
   });
 
-  // آپلود فایل مستقیم با formidable
+  // آپلود فایل - حالا در api/rag/upload.js handle می‌شه
+  // این route غیرفعال شده و به Vercel function منتقل شده
+  /*
   app.post('/api/rag/upload', async (c) => {
     console.log('File upload started');
     
@@ -187,6 +189,7 @@ reader.readAsDataURL(file);`,
       });
     });
   });
+  */
 
   // پرسش از همه فایل‌های ذخیره شده
   app.post('/api/rag/ask', async (c) => {

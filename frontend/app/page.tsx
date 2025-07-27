@@ -37,13 +37,23 @@ export default function Home() {
           </div>
         </div>
         
-        <Link 
-          href="/finlandq"
-          className="inline-flex items-center gap-3 bg-gradient-to-r from-[#4385f6] to-blue-600 text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:shadow-lg transition-all duration-200 group"
-        >
-          شروع چت
-          <ArrowLeft className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-        </Link>
+        <div className="flex gap-4 justify-center">
+          <Link 
+            href="/finlandq"
+            className="inline-flex items-center gap-3 bg-gradient-to-r from-[#4385f6] to-blue-600 text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:shadow-lg transition-all duration-200 group"
+          >
+            شروع چت
+            <ArrowLeft className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </Link>
+          
+          <Link 
+            href="/upload"
+            className="inline-flex items-center gap-3 bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:shadow-lg transition-all duration-200 group"
+          >
+            آپلود فایل
+            <FileText className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          </Link>
+        </div>
         
         <div className="mt-12 text-center">
           <p className="text-gray-500 text-sm">
