@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FindLanQBot API</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        .endpoint {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+        }
+        .method {
+            background: #28a745;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 FindLanQBot API</h1>
+        <p>AI Chat Platform with Hono Backend and Next.js Frontend</p>
+        
+        <h2>API Endpoints:</h2>
+        
+        <div class="endpoint">
+            <strong>GET /api</strong> - API Information
+        </div>
+        
+        <div class="endpoint">
+            <strong>GET /api/health</strong> - Health Check
+        </div>
+        
+        <div class="endpoint">
+            <strong>POST /api/ask</strong> - Ask AI Questions
+        </div>
+        
+        <div class="endpoint">
+            <strong>POST /api/documents</strong> - Add Documents
+        </div>
+        
+        <div class="endpoint">
+            <strong>POST /api/rag/upload</strong> - Upload Word Files
+        </div>
+        
+        <div class="endpoint">
+            <strong>POST /api/rag/ask</strong> - Ask questions about uploaded files
+        </div>
+        
+        <div class="endpoint">
+            <strong>GET /api/rag/files</strong> - List uploaded files
+        </div>
+        
+        <div class="endpoint">
+            <strong>DELETE /api/rag/files/:fileName</strong> - Delete uploaded file
+        </div>
+        
+        <h2>Database:</h2>
+        <p>✅ Turso Cloud SQLite Database</p>
+        
+        <h2>Technologies:</h2>
+        <ul>
+            <li>Hono.js - Web Framework</li>
+            <li>Turso - Cloud SQLite Database</li>
+            <li>Google Gemini AI</li>
+            <li>Vercel - Serverless Hosting</li>
+            <li>Bun - JavaScript Runtime</li>
+        </ul>
+    </div>
+</body>
+</html> 
