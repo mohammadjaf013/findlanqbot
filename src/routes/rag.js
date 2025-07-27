@@ -102,7 +102,7 @@ reader.readAsDataURL(file);`,
     console.log('File upload started');
     
     return new Promise((resolve) => {
-      const formidable = require('formidable');
+      const { formidable } = require('formidable');
       const fs = require('fs');
       // دسترسی به raw Node.js request
       const req = c.req.raw || c.env?.incoming || c.req;
