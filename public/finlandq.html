@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فنلاند کیو - انتقال به فرانت‌اند</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4385f6 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            max-width: 600px;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        .btn {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            margin: 10px;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .api-info {
+            margin-top: 30px;
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 فنلاند کیو</h1>
+        <p>این صفحه مال backend API هست. برای استفاده از رابط کاربری، به فرانت‌اند مراجعه کنید.</p>
+        
+        <div>
+            <a href="#" onclick="alert('لطفاً آدرس فرانت‌اند خود را وارد کنید')" class="btn">
+                🌐 چت با دستیار
+            </a>
+            <a href="#" onclick="alert('لطفاً آدرس فرانت‌اند خود را وارد کنید')" class="btn">
+                📄 آپلود فایل
+            </a>
+        </div>
+        
+        <div class="api-info">
+            <p><strong>Backend API:</strong> https://bot-api.finlandq.com</p>
+            <p>برای deploy فرانت‌اند Next.js، به پوشه frontend مراجعه کنید</p>
+        </div>
+    </div>
+
+    <script>
+        // Auto redirect after 5 seconds to main API page
+        setTimeout(() => {
+            if (confirm('به صفحه اصلی API منتقل شوید؟')) {
+                window.location.href = '/';
+            }
+        }, 5000);
+    </script>
+</body>
+</html> 
