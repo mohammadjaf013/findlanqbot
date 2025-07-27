@@ -32,12 +32,33 @@ function parseMultipart(req) {
     const files = {};
     
     // Get headers from the right place
-    const headers = req.headers || req.raw?.headers || {};
+    let headers = req.headers || req.raw?.headers || {};
+    
+    // Convert Headers object to plain object if needed
+    if (headers.constructor && headers.constructor.name === 'Headers') {
+      const plainHeaders = {};
+      for (const [key, value] of headers.entries()) {
+        plainHeaders[key.toLowerCase()] = value;
+      }
+      headers = plainHeaders;
+      console.log('Converted Headers object to plain object');
+    } else if (typeof headers.get === 'function') {
+      // Alternative method for Headers-like objects
+      const plainHeaders = {};
+      const contentType = headers.get('content-type');
+      if (contentType) plainHeaders['content-type'] = contentType;
+      // Add other essential headers
+      const contentLength = headers.get('content-length');
+      if (contentLength) plainHeaders['content-length'] = contentLength;
+      headers = plainHeaders;
+      console.log('Converted Headers-like object to plain object');
+    }
     
     console.log('Headers for busboy:', headers);
+    console.log('Content-Type:', headers['content-type']);
     
     if (!headers['content-type']) {
-      reject(new Error('Content-Type header missing'));
+      reject(new Error('Content-Type header missing: ' + JSON.stringify(Object.keys(headers))));
       return;
     }
     
