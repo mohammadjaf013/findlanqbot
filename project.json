@@ -1,0 +1,12 @@
+{
+  "name": "findlanqbot-api",
+  "type": "nodejs-api",
+  "framework": "hono",
+  "description": "Backend API for FindLanQBot - NOT a Next.js project",
+  "runtime": "nodejs18.x",
+  "functions": [
+    "api/index.js",
+    "api/rag/upload.js"
+  ],
+  "static": "public"
+} 

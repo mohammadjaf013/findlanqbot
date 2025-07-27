@@ -18,7 +18,10 @@ README.md
 SETUP.md
 test-*.txt
 frontend/
-# Next.js specific files (prevent Next.js detection)
+# Complete frontend directory
+frontend/
+
+# All Next.js files and directories  
 next.config.js
 next-env.d.ts
 .next/
@@ -26,4 +29,12 @@ pages/
 components/
 styles/
 tailwind.config.js
-postcss.config.js 
+postcss.config.js
+app/
+layout.tsx
+globals.css
+page.tsx
+
+# Package files that might confuse Vercel
+tsconfig.json
+**/tsconfig.json 
