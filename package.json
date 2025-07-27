@@ -8,7 +8,7 @@
     "start": "node src/app.js",
     "build": "echo 'Build completed successfully for Vercel'",
     "test": "echo 'No tests specified'",
-    "vercel-build": "echo 'Vercel build completed - no server initialization needed'"
+    "vercel-build": "mkdir -p .vercel/output && echo 'Vercel build completed - no output directory needed for serverless functions'"
   },
   "keywords": [
     "ai",
