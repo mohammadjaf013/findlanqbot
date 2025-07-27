@@ -24,6 +24,16 @@ export default function UploadPage() {
         setFile(null)
         return
       }
+      
+      // بررسی اندازه فایل (1MB = 1024*1024 bytes)
+      if (selectedFile.size > 1024 * 1024) {
+        setUploadResult({
+          error: 'حجم فایل نباید بیش از 1 مگابایت باشد'
+        })
+        setFile(null)
+        return
+      }
+      
       setFile(selectedFile)
       setUploadResult(null)
     }
@@ -106,9 +116,9 @@ export default function UploadPage() {
                 <p className="mb-2 text-sm text-gray-300">
                   <span className="font-semibold">کلیک کنید</span> یا فایل را اینجا رها کنید
                 </p>
-                <p className="text-xs text-gray-400">
-                  فقط فایل‌های Word (DOC, DOCX) - حداکثر 2MB
-                </p>
+                                 <p className="text-xs text-gray-400">
+                   فقط فایل‌های Word (DOC, DOCX) - حداکثر 1MB
+                 </p>
                 {file && (
                   <p className="mt-3 text-sm text-green-400">
                     فایل انتخاب شده: {file.name}
@@ -198,12 +208,12 @@ export default function UploadPage() {
           {/* Help Section */}
           <div className="mt-8 p-4 bg-gray-700 rounded-lg">
             <h3 className="text-white font-semibold mb-2">راهنما:</h3>
-            <ul className="text-gray-300 text-sm space-y-1">
-              <li>• فقط فایل‌های Word (.doc, .docx) قابل آپلود هستند</li>
-              <li>• حجم فایل نباید بیش از 2 مگابایت باشد</li>
-              <li>• فایل آپلود شده به بخش‌های کوچکتر تقسیم می‌شود</li>
-              <li>• پس از آپلود، می‌توانید از محتوای فایل سوال بپرسید</li>
-            </ul>
+                         <ul className="text-gray-300 text-sm space-y-1">
+               <li>• فقط فایل‌های Word (.doc, .docx) قابل آپلود هستند</li>
+               <li>• حجم فایل نباید بیش از 1 مگابایت باشد</li>
+               <li>• فایل آپلود شده به بخش‌های کوچکتر تقسیم می‌شود</li>
+               <li>• پس از آپلود، می‌توانید از محتوای فایل سوال بپرسید</li>
+             </ul>
           </div>
         </div>
 

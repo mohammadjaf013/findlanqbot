@@ -2,6 +2,10 @@
   "functions": {
     "api/index.js": {
       "maxDuration": 30
+    },
+    "api/rag/upload.js": {
+      "maxDuration": 60,
+      "memory": 1024
     }
   },
   "rewrites": [

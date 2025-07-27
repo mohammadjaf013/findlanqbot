@@ -29,8 +29,11 @@ module.exports = function handler(req, res) {
   const form = new formidable.IncomingForm({
     uploadDir: '/tmp',
     keepExtensions: true,
-    maxFileSize: 2 * 1024 * 1024, // 2MB
+    maxFileSize: 1 * 1024 * 1024, // 1MB - کاهش سایز
+    maxTotalFileSize: 1 * 1024 * 1024, // 1MB total
     allowEmptyFiles: false,
+    maxFields: 10,
+    maxFieldsSize: 2 * 1024, // 2KB for fields
   });
 
   form.parse(req, async (err, fields, files) => {
