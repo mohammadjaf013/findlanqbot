@@ -1,7 +1,10 @@
 const { Hono } = require('hono');
 const { cors } = require('hono/cors');
 const { logger } = require('hono/logger');
-const { initDatabase } = require('./services/db');
+// انتخاب نوع دیتابیس بر اساس متغیر محیطی
+const { initDatabase } = process.env.TURSO_DATABASE_URL 
+  ? require('./services/turso-db') 
+  : require('./services/db');
 const askRoutes = require('./routes/ask');
 const ragRoutes = require('./routes/rag');
 

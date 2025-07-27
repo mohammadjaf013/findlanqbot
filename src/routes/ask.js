@@ -1,4 +1,7 @@
-const { getAllDocuments } = require('../services/db');
+// انتخاب نوع دیتابیس بر اساس متغیر محیطی
+const { getAllDocuments } = process.env.TURSO_DATABASE_URL 
+  ? require('../services/turso-db') 
+  : require('../services/db');
 const { askAI } = require('../services/ai');
 
 module.exports = (app) => {
@@ -64,7 +67,9 @@ module.exports = (app) => {
         }, 400);
       }
 
-      const { addDocument } = require('../services/db');
+      const { addDocument } = process.env.TURSO_DATABASE_URL 
+        ? require('../services/turso-db') 
+        : require('../services/db');
       const id = await addDocument(content.trim());
       
       return c.json({ 

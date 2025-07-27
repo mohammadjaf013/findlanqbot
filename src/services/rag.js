@@ -4,7 +4,10 @@ const mammoth = require('mammoth');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-const { saveFileAndChunks, searchChunks, getFilesList, deleteFile, getAllChunksWithEmbeddings } = require('./db');
+// انتخاب نوع دیتابیس بر اساس متغیر محیطی
+const { saveFileAndChunks, searchChunks, getFilesList, deleteFile, getAllChunksWithEmbeddings } = process.env.TURSO_DATABASE_URL 
+  ? require('./turso-db') 
+  : require('./db');
 
 // تنظیمات API کلیدها
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyDaZf6m6Qc-j_Mky9Zk9jRTQPffvYXQd9M';
