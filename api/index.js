@@ -99,15 +99,25 @@ module.exports = async (req, res) => {
     // Create a proper Request object
     const url = `https://${req.headers.host}${req.url}`;
     
-                   // Create Web API Request with raw request access
-     const request = new Request(url, {
+                   // Create Web API Request with proper body handling
+     let requestInit = {
        method: req.method,
-       headers: new Headers(req.headers),
-       ...(req.body && { 
-         body: typeof req.body === 'string' ? req.body : JSON.stringify(req.body),
-         duplex: 'half'
-       })
-     });
+       headers: new Headers(req.headers)
+     };
+     
+     // Handle body for different content types
+     const contentType = req.headers['content-type'] || '';
+     
+     if (contentType.includes('multipart/form-data')) {
+       // For multipart, we need to pass the raw stream
+       requestInit.body = req;
+       requestInit.duplex = 'half';
+     } else if (req.body) {
+       requestInit.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+       requestInit.duplex = 'half';
+     }
+     
+     const request = new Request(url, requestInit);
      
      // Add raw request to the Web API request for middleware access
      request.raw = req;
