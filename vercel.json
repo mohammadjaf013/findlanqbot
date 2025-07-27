@@ -1,16 +1,13 @@
 {
-  "version": 2,
-  "name": "findlanqbot-backend-api",
-  "builds": [
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 30
     },
-    {
-      "src": "public/**/*",
-      "use": "@vercel/static"
+    "api/rag/upload.js": {
+      "maxDuration": 60,
+      "memory": 1024
     }
-  ],
+  },
   "routes": [
     {
       "src": "/api/rag/upload",
@@ -21,20 +18,8 @@
       "dest": "/api/index.js"
     },
     {
-      "src": "/finlandq",
-      "dest": "/public/finlandq.html"
-    },
-    {
-      "src": "/upload",
-      "dest": "/public/upload.html"
-    },
-    {
-      "src": "/upload-text",
-      "dest": "/public/upload-text.html"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/public/$1"
+      "dest": "/api/index.js"
     }
   ]
 } 
