@@ -65,6 +65,16 @@ app.get('/', (c) => {
   });
 });
 
+// اضافه کردن route برای /api/
+app.get('/api', (c) => {
+  return c.json({
+    message: 'FindLanQBot API',
+    version: '1.0.0',
+    environment: 'Vercel',
+    status: 'active'
+  });
+});
+
 // اضافه کردن روت‌های API
 askRoutes(app);
 ragRoutes(app);
