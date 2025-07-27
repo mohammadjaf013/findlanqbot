@@ -51,60 +51,66 @@ module.exports = (app) => {
     }
   });
 
-  // آپلود و پردازش فایل Word
+  // آپلود فایل با Base64 encoding
   app.post('/api/rag/upload', async (c) => {
     console.log('upload started');
     try {
-      // مستقیماً از Hono formData استفاده می‌کنیم
-      const formData = await c.req.formData();
-      const file = formData.get('file');
+      const { fileName, fileData, fileType } = await c.req.json();
       
-      if (!file) {
+      if (!fileName || !fileData) {
         return c.json({ 
-          error: 'فایل انتخاب نشده است' 
+          error: 'نام فایل و داده فایل الزامی است',
+          usage: 'ارسال JSON با فیلدهای fileName, fileData (base64), fileType'
         }, 400);
       }
 
-      console.log('File info:', {
-        name: file.name,
-        size: file.size,
-        type: file.type
-      });
-
       // بررسی نوع فایل
-      if (!isValidFileType(file.name)) {
+      if (!isValidFileType(fileName)) {
         return c.json({ 
           error: 'فقط فایل‌های Word (.docx, .doc) مجاز هستند' 
         }, 400);
       }
 
+      // تبدیل Base64 به buffer
+      let buffer;
+      try {
+        const base64Data = fileData.replace(/^data:.*,/, ''); // حذف data URL prefix
+        buffer = Buffer.from(base64Data, 'base64');
+      } catch (error) {
+        return c.json({ 
+          error: 'فرمت Base64 نامعتبر است' 
+        }, 400);
+      }
+
       // بررسی اندازه فایل (2MB برای Vercel)
-      if (file.size > 2 * 1024 * 1024) {
+      if (buffer.length > 50 * 1024 * 1024) {
         return c.json({ 
           error: 'حجم فایل نباید بیشتر از 2MB باشد (محدودیت Vercel)' 
         }, 400);
       }
 
-      // تبدیل File object به buffer
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
+      console.log('File info:', {
+        name: fileName,
+        size: buffer.length,
+        type: fileType
+      });
       
       // ذخیره موقت در /tmp
-      const tempPath = `/tmp/upload_${Date.now()}_${file.name}`;
+      const tempPath = `/tmp/upload_${Date.now()}_${fileName}`;
       const fs = require('fs');
       fs.writeFileSync(tempPath, buffer);
       
       console.log('File saved to:', tempPath);
       
       // پردازش فایل
-      const result = await processWordFile(tempPath, file.name);
+      const result = await processWordFile(tempPath, fileName);
 
       // حذف فایل موقت
       fs.unlinkSync(tempPath);
 
       return c.json({
         success: true,
-        fileName: file.name,
+        fileName: fileName,
         chunksCount: result.chunks.length,
         fileHash: result.fileHash,
         message: 'فایل با موفقیت آپلود و در دیتابیس ذخیره شد'
