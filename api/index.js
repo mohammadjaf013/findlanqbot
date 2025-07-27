@@ -87,24 +87,31 @@ app.onError((err, c) => {
   }, 500);
 });
 
-// Custom Vercel handler for Hono
+// Custom Vercel handler for Hono with proper body handling
 module.exports = async (req, res) => {
   await ensureDbInitialized();
   
-  // Create a proper Request object for Hono
-  const url = `https://${req.headers.host}${req.url}`;
-  const init = {
-    method: req.method,
-    headers: req.headers,
-  };
-  
-  // Add body for POST requests
-  if (req.method === 'POST' || req.method === 'PUT') {
-    init.body = req.body;
-  }
-  
   try {
-    const request = new Request(url, init);
+    // Handle different content types
+    let body = null;
+    
+          if (req.method === 'POST' || req.method === 'PUT') {
+        // For Vercel, we need to handle the raw body differently
+        body = req;
+      }
+    
+    // Create URL
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
+    const host = req.headers.host;
+    const url = `${protocol}://${host}${req.url}`;
+    
+    // Create request object
+    const request = new Request(url, {
+      method: req.method,
+      headers: req.headers,
+      body: body
+    });
+    
     const response = await app.fetch(request);
     
     // Set status
@@ -121,6 +128,10 @@ module.exports = async (req, res) => {
     
   } catch (error) {
     console.error('Vercel handler error:', error);
-    res.status(500).json({ error: 'Internal server error', message: error.message });
+    res.status(500).json({ 
+      error: 'Internal server error', 
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 }; 

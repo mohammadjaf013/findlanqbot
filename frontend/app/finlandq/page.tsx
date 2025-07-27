@@ -544,7 +544,7 @@ export default function FinlandQPage() {
     }
 
     try {
-      const response = await fetch('https://laughing-space-umbrella-q7xwqx9rpqcx9g9-3001.app.github.dev/api/rag/ask', {
+      const response = await fetch('https://bot-api.finlandq.com/api/rag/ask', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
