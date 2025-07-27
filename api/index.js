@@ -1,7 +1,6 @@
 const { Hono } = require('hono');
 const { cors } = require('hono/cors');
 const { logger } = require('hono/logger');
-const { handle } = require('hono/vercel');
 const askRoutes = require('../src/routes/ask');
 const ragRoutes = require('../src/routes/rag');
 
@@ -88,4 +87,40 @@ app.onError((err, c) => {
   }, 500);
 });
 
-module.exports = handle(app); 
+// Custom Vercel handler for Hono
+module.exports = async (req, res) => {
+  await ensureDbInitialized();
+  
+  // Create a proper Request object for Hono
+  const url = `https://${req.headers.host}${req.url}`;
+  const init = {
+    method: req.method,
+    headers: req.headers,
+  };
+  
+  // Add body for POST requests
+  if (req.method === 'POST' || req.method === 'PUT') {
+    init.body = req.body;
+  }
+  
+  try {
+    const request = new Request(url, init);
+    const response = await app.fetch(request);
+    
+    // Set status
+    res.status(response.status);
+    
+    // Set headers
+    for (const [key, value] of response.headers.entries()) {
+      res.setHeader(key, value);
+    }
+    
+    // Send response
+    const text = await response.text();
+    res.send(text);
+    
+  } catch (error) {
+    console.error('Vercel handler error:', error);
+    res.status(500).json({ error: 'Internal server error', message: error.message });
+  }
+}; 
