@@ -7,14 +7,16 @@ module.exports = (app) => {
   app.post('/api/rag/upload', async (c) => {
     console.log('upload')
     try {
-      const formData = await c.req.formData();
-      const file = formData.get('file');
+      // Get parsed form data from middleware
+      const parsedData = c.get('formData');
       
-      if (!file) {
+      if (!parsedData || !parsedData.files || !parsedData.files.file) {
         return c.json({ 
           error: 'فایل انتخاب نشده است' 
         }, 400);
       }
+      
+      const file = parsedData.files.file;
 
       // بررسی نوع فایل
       if (!isValidFileType(file.name)) {
@@ -30,8 +32,8 @@ module.exports = (app) => {
         }, 400);
       }
 
-      // ذخیره فایل
-      const filePath = await saveUploadedFile(file, file.name);
+      // فایل قبلاً در middleware save شده
+      const filePath = file.tempPath;
       
       // پردازش فایل و ذخیره در دیتابیس
       const result = await processWordFile(filePath, file.name);

@@ -1,6 +1,7 @@
 const { Hono } = require('hono');
 const { cors } = require('hono/cors');
 const { logger } = require('hono/logger');
+const { fileUploadMiddleware } = require('../src/middleware/fileUpload');
 const askRoutes = require('../src/routes/ask');
 const ragRoutes = require('../src/routes/rag');
 
@@ -42,6 +43,9 @@ app.use('*', async (c, next) => {
   await ensureDbInitialized();
   await next();
 });
+
+// File upload middleware
+app.use('*', fileUploadMiddleware());
 
 // روت اصلی
 app.get('/', (c) => {
@@ -95,28 +99,21 @@ module.exports = async (req, res) => {
     // Create a proper Request object
     const url = `https://${req.headers.host}${req.url}`;
     
-    // Handle body for POST requests
-    let body = undefined;
-    if (req.method === 'POST' || req.method === 'PUT') {
-      if (req.body) {
-        if (typeof req.body === 'string') {
-          body = req.body;
-        } else {
-          body = JSON.stringify(req.body);
-        }
-      }
-    }
-    
-    // Create Web API Request
-    const request = new Request(url, {
-      method: req.method,
-      headers: new Headers(req.headers),
-      body: body,
-      ...(body && { duplex: 'half' })
-    });
-    
-    // Call Hono
-    const response = await app.fetch(request);
+                   // Create Web API Request with raw request access
+     const request = new Request(url, {
+       method: req.method,
+       headers: new Headers(req.headers),
+       ...(req.body && { 
+         body: typeof req.body === 'string' ? req.body : JSON.stringify(req.body),
+         duplex: 'half'
+       })
+     });
+     
+     // Add raw request to the Web API request for middleware access
+     request.raw = req;
+     
+     // Call Hono
+     const response = await app.fetch(request);
     
     // Set response
     res.status(response.status);
