@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "bun run src/app.js",
     "start": "node src/app.js",
-    "build": "echo 'API Build completed - No Next.js here'",
+    "build": "cd frontend && npm install && npm run build",
+    "vercel-build": "cd frontend && npm install && npm run build",
+    "install": "cd frontend && npm install",
     "test": "echo 'No tests specified'"
   },
   "engines": {
@@ -24,14 +26,15 @@
     "@google/generative-ai": "^0.24.1",
     "@langchain/google-genai": "^0.2.16",
     "@libsql/client": "^0.14.0",
+    "@upstash/vector": "^1.2.2",
     "axios": "^1.6.0",
+    "busboy": "^1.6.0",
     "dotenv": "^16.3.1",
+    "formidable": "^3.5.1",
     "hono": "^3.12.0",
     "langchain": "^0.3.30",
     "mammoth": "^1.9.1",
-    "sqlite3": "^5.1.6",
-    "busboy": "^1.6.0",
-    "formidable": "^3.5.1"
+    "sqlite3": "^5.1.6"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

@@ -1,40 +1,18 @@
 {
   "version": 2,
-  "name": "findlanqbot-backend-api",
-  "builds": [
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "public/**/*",
-      "use": "@vercel/static"
+  "name": "findlanqbot",
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "outputDirectory": ".next",
+  "rootDirectory": ".",
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://bot-api.finlandq.com"
+  },
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_API_URL": "https://bot-api.finlandq.com"
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/rag/upload",
-      "dest": "/api/rag/upload.js"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.js"
-    },
-    {
-      "src": "/finlandq",
-      "dest": "/public/finlandq.html"
-    },
-    {
-      "src": "/upload",
-      "dest": "/public/upload.html"
-    },
-    {
-      "src": "/upload-text",
-      "dest": "/public/upload-text.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
-    }
-  ]
+  }
 } 

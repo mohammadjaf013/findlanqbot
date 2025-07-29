@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import Navigation from './components/Navigation'
 
 export const metadata: Metadata = {
   title: 'فنلاند کیو - دستیار هوشمند مهاجرت به فنلاند',
@@ -19,6 +20,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body className="font-persian antialiased">
+        <Navigation />
         {children}
       </body>
     </html>

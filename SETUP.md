@@ -93,3 +93,8 @@ curl -X POST http://localhost:3001/api/documents \
 1. README.md را مطالعه کنید
 2. فایل‌های log را بررسی کنید
 3. GitHub Issues ایجاد کنید
+
+
+
+frontend> vercel build
+vercel --prod

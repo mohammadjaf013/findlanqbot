@@ -25,6 +25,9 @@ interface ConsultationFormData {
   acquainted: string;
   position: string[];
   message: string;
+  conversation_summary?: string;
+  sales_analysis?: string;
+  source?: string;
 }
 
 // Quick Reply Options Component
@@ -445,6 +448,25 @@ function ConsultationFormContent({ onClose, onSubmit }: { onClose: () => void; o
   );
 }
 
+// تابع برای تبدیل markdown ساده به HTML
+const parseMarkdown = (text: string) => {
+  let result = text;
+  
+  // تبدیل **متن** به <strong>متن</strong>
+  result = result.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // تبدیل *متن* به <em>متن</em>
+  result = result.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  
+  // تبدیل \n به <br>
+  result = result.replace(/\n/g, '<br>');
+  
+  // تبدیل لینک‌ها [متن](url) به <a href="url">متن</a>
+  result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-600 hover:text-blue-800 underline">$1</a>');
+  
+  return result;
+};
+
 export default function FinlandQPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -579,7 +601,7 @@ export default function FinlandQPage() {
       }
     } catch (error) {
       setIsLoading(false);
-      simulateStreaming('متأسفم، خطایی رخ داده است. برای اطلاعات تکمیلی با پشتیبانی شماره 88888888 تماس بگیرید.');
+      simulateStreaming('متأسفم، خطایی رخ داده است. برای اطلاعات تکمیلی با پشتیبانی شماره 91691021 تماس بگیرید.');
     }
   };
 
@@ -743,22 +765,21 @@ export default function FinlandQPage() {
     },
     { 
       field: 'position', 
-      question: 'ممنونم! حالا می‌خوام بدونم آخرین مدرک تحصیلی‌تون چی بود؟', 
+      question: 'عالی! حالا می‌خوام بدونم از کدام محصولات ما استفاده می‌کنید یا قصد دارید استفاده کنید؟ (می‌تونید چند مورد انتخاب کنید)', 
       options: [
-        { value: 'زیر دیپلم', label: 'زیر دیپلم' },
-        { value: 'دیپلم', label: 'دیپلم' },
-        { value: 'کاردانی', label: 'کاردانی' },
-        { value: 'کارشناسی', label: 'کارشناسی' },
-        { value: 'کارشناسی ارشد', label: 'کارشناسی ارشد' },
-        { value: 'دکتری', label: 'دکتری' }
+        { value: 'چهار فصل (آمیس)', label: 'چهار فصل (آمیس)' },
+        { value: 'high-school', label: 'دبیرستان' },
+        { value: 'university', label: 'کارشناسی' },
+        { value: 'master', label: 'کارشناسی ارشد' },
+        { value: 'startup', label: 'استارتاپ و سرمایه‌گذاری' }
       ], 
-      multiple: false,
-      validation: { required: true, message: 'این خیلی مهمه برای انتخاب بهترین مسیر' },
+      multiple: true,
+      validation: { required: true, message: 'این اطلاعات برای ارائه بهترین خدمات ضروریه' },
       responseTemplates: [
-        'عالی! پس {value} دارید. بر این اساس می‌تونم برنامه مناسبی براتون پیشنهاد بدم 🎯',
-        'پرفکت! {value}؟ خوب می‌تونم راهنماییتون کنم 💪',
-        'خیلی خوب! با {value} فرصت‌های خوبی پیش رویتونه 🌟',
-        'عالیه! {value} نقطه شروع خوبیه برای آینده 🚀'
+        'عالی! پس به {value} علاقه‌مندید. می‌تونم کاملاً راهنماییتون کنم 🎯',
+        'پرفکت! {value} انتخاب فوق‌العاده‌ای بوده. بهترین مشاوره رو براتون آماده می‌کنم 💪',
+        'خیلی خوب! {value} گزینه‌های عالی‌ن. فرصت‌های فوق‌العاده‌ای پیش رویتونه 🌟',
+        'عالیه! {value} درست انتخاب کردید. این محصولات آینده درخشانی براتون رقم می‌زنه 🚀'
       ]
     },
     { 
@@ -883,8 +904,17 @@ export default function FinlandQPage() {
     const data = consultationData;
     
     if (data.age && parseInt(data.age) < 30) points.push('سن مناسب برای مهاجرت');
-    const position = Array.isArray(data.position) ? data.position[0] : data.position;
-    if (position === 'کارشناسی ارشد' || position === 'دکتری') points.push('تحصیلات عالی');
+    const positions = Array.isArray(data.position) ? data.position : (data.position ? [data.position] : []);
+    const positionStr = positions.join(',');
+    if (positionStr.includes('master') || positionStr.includes('startup')) {
+      points.push('هدف‌گذاری بلندپروازانه');
+    }
+    if (positionStr.includes('چهار فصل (آمیس)')) {
+      points.push('علاقه‌مند به برنامه پرطرفدار');
+    }
+    if (positionStr.includes('university') || positionStr.includes('high-school')) {
+      points.push('تمرکز روی تحصیل');
+    }
     if (data.city === 'تهران' || data.city === 'اصفهان') points.push('شهر بزرگ - دسترسی آسان');
     if (data.acquainted === 'instagram' || data.acquainted === 'telegram') points.push('فعال در شبکه‌های اجتماعی');
     
@@ -898,8 +928,17 @@ export default function FinlandQPage() {
     if (data.age && parseInt(data.age) < 25) tips.push('تأکید روی فرصت‌های تحصیلی');
     if (data.age && parseInt(data.age) > 30) tips.push('تأکید روی فرصت‌های کاری');
     if (data.acquainted === 'instagram') tips.push('ارسال محتوای visual');
-    const position = Array.isArray(data.position) ? data.position[0] : data.position;
-    if (position === 'دیپلم') tips.push('معرفی دوره‌های آمادگی');
+    const positions = Array.isArray(data.position) ? data.position : (data.position ? [data.position] : []);
+    const positionStr = positions.join(',');
+    if (positionStr.includes('high-school')) {
+      tips.push('معرفی دوره‌های آمادگی');
+    }
+    if (positionStr.includes('startup')) {
+      tips.push('تأکید روی فرصت‌های کارآفرینی');
+    }
+    if (positionStr.includes('چهار فصل')) {
+      tips.push('ارسال اطلاعات کامل برنامه آمیس');
+    }
     
     return tips;
   };
@@ -1107,8 +1146,16 @@ export default function FinlandQPage() {
           const conversationSummary = generateConversationSummary();
           const salesAnalysis = generateSalesAnalysis();
           
+          // ذخیره تحلیل‌ها در consultationData
+          setConsultationData(prev => ({
+            ...prev,
+            conversation_summary: conversationSummary,
+            sales_analysis: salesAnalysis,
+            source:"chat"
+          }));
+          
           // ایجاد خلاصه اطلاعات
-          const summaryText = `عالی! همه اطلاعات رو گرفتم. این اطلاعات هم بده که برای همکارم بفرستم که با شما تماس بگیره:\n\n📝 **خلاصه اطلاعات شما:**\n• نام: ${newData.salutationtype} ${newData.first_name} ${newData.last_name}\n• سن: ${newData.age} سال\n• شهر: ${newData.city}\n• ایمیل: ${newData.email}\n• موبایل: ${newData.mobile}\n• آشنایی: ${newData.acquainted}\n• مدرک تحصیلی: ${newData.position}\n${newData.message ? `• پیام اضافی: ${newData.message}` : ''}\n\n${conversationSummary}\n\n${salesAnalysis}\n\nدر حال ارسال درخواست مشاوره...`;
+          const summaryText = `عالی! همه اطلاعات رو گرفتم. این اطلاعات هم بده که برای همکارم بفرستم که با شما تماس بگیره:\n\n📝 **خلاصه اطلاعات شما:**\n• نام: ${newData.salutationtype} ${newData.first_name} ${newData.last_name}\n• سن: ${newData.age} سال\n• شهر: ${newData.city}\n• ایمیل: ${newData.email}\n• موبایل: ${newData.mobile}\n• آشنایی: ${newData.acquainted}\n• محصولات مورد علاقه: ${Array.isArray(newData.position) ? newData.position.join(', ') : newData.position}\n${newData.message ? `• پیام اضافی: ${newData.message}` : ''}\n\nدر حال ارسال درخواست مشاوره...`;
           
           const processingMessage: Message = {
             id: Date.now().toString(),
@@ -1117,13 +1164,17 @@ export default function FinlandQPage() {
             timestamp: new Date()
           };
           setMessages(prev => [...prev, processingMessage]);
-          submitConsultation();
+          
+          // کمی صبر کنیم تا consultationData آپدیت شود
+          setTimeout(() => {
+            submitConsultation(conversationSummary, salesAnalysis);
+          }, 100);
         }, 1000);
       }
     }, 800);
   };
 
-  const submitConsultation = async () => {
+  const submitConsultation = async (conversationSummary?: string, salesAnalysis?: string) => {
     setIsLoading(true);
     
     try {
@@ -1142,7 +1193,10 @@ export default function FinlandQPage() {
           city: consultationData.city || '',
           acquainted: consultationData.acquainted || '',
           position: Array.isArray(consultationData.position) ? consultationData.position : [consultationData.position].filter(Boolean),
-          message: consultationData.message || ''
+          message: consultationData.message || '',
+          conversation_summary: conversationSummary || consultationData.conversation_summary || '',
+          sales_analysis: salesAnalysis || consultationData.sales_analysis || '',
+          source: consultationData.source || 'chat'
         })
       });
 
@@ -1152,7 +1206,7 @@ export default function FinlandQPage() {
         const successMessage: Message = {
           id: Date.now().toString(),
           type: 'assistant',
-          content: `🎉 واای عالی ${consultationData.salutationtype} ${consultationData.first_name}!\n\n✅ درخواستتون با موفقیت ثبت شد و همین الان به تیم ما رسید!\n\nدوستان ما تا 24 ساعت آینده باهاتون تماس می‌گیرن و مشاوره کاملتون رو می‌دن. نگران نباشید، حتماً بهتون زنگ می‌زنیم! 😊\n\n📋 کد پیگیری شما: ${result.data.code}\n\n📞 اگه عجله دارید: 88888888\n\nممنونم که به ما اعتماد کردید! 🙏`,
+          content: `🎉 واای عالی ${consultationData.salutationtype} ${consultationData.first_name}!\n\n✅ درخواستتون با موفقیت ثبت شد و همین الان به تیم ما رسید!\n\nدوستان ما تا 24 ساعت آینده باهاتون تماس می‌گیرن و مشاوره کاملتون رو می‌دن. نگران نباشید، حتماً بهتون زنگ می‌زنیم! 😊\n\n📋 کد پیگیری شما: ${result.data.code}\n\n📞 اگه عجله دارید: 91691021\n\nممنونم که به ما اعتماد کردید! 🙏`,
           timestamp: new Date()
         };
         setMessages(prev => [...prev, successMessage]);
@@ -1174,7 +1228,7 @@ export default function FinlandQPage() {
       const errorMessage: Message = {
         id: Date.now().toString(),
         type: 'assistant',
-        content: 'اوه نه! 😔 یه مشکل فنی پیش اومده و نتونستم درخواستتون رو ثبت کنم.\n\nلطفاً دوباره تلاش کنید یا مستقیماً با شماره 88888888 تماس بگیرید تا دوستان ما راهنماییتون کنن.\n\nمعذرت می‌خوام بابت این مشکل! 🙏',
+        content: 'اوه نه! 😔 یه مشکل فنی پیش اومده و نتونستم درخواستتون رو ثبت کنم.\n\nلطفاً دوباره تلاش کنید یا مستقیماً با شماره 91691021 تماس بگیرید تا دوستان ما راهنماییتون کنن.\n\nمعذرت می‌خوام بابت این مشکل! 🙏',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -1210,6 +1264,7 @@ export default function FinlandQPage() {
               <Link href="/" className="flex items-center gap-3 group">
                 <div className="w-10 h-10 bg-gradient-to-r from-[#4385f6] to-blue-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Globe className="w-6 h-6 text-white" />
+                  
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold bg-gradient-to-r from-[#4385f6] to-blue-600 bg-clip-text text-transparent">
@@ -1230,7 +1285,7 @@ export default function FinlandQPage() {
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-sm text-green-700">آنلاین</span>
               </div>
-              <div className="text-sm text-gray-600">پشتیبانی: 88888888</div>
+              <div className="text-sm text-gray-600">پشتیبانی: 91691021</div>
               <Link 
                 href="/" 
                 className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#4385f6] transition-colors"
@@ -1344,11 +1399,14 @@ export default function FinlandQPage() {
               >
                 <div className="flex items-center gap-2 sm:gap-3">
                   <motion.div 
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-full flex items-center justify-center"
+                    // animate={{ rotate: 360 }}
+                    // transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    className="w-10 h-10 sm:w-10 sm:h-10 bg-white/60 rounded-full flex items-center justify-center"
                   >
-                    <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                    {/* <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" /> */}
+
+                    <img src="q.png" className='w-full h-full object-contain text-white' />
+
                   </motion.div>
                   <div>
                     <h2 className="font-semibold text-sm sm:text-base">چت با دستیار فنلاند کیو</h2>
@@ -1377,9 +1435,10 @@ export default function FinlandQPage() {
                             : 'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 shadow-md'
                         } rounded-2xl px-3 sm:px-4 py-2 sm:py-3 transition-all duration-300`}
                       >
-                        <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
-                          {message.content}
-                        </p>
+                        <p 
+                          className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap"
+                          dangerouslySetInnerHTML={{ __html: parseMarkdown(message.content) }}
+                        ></p>
                         <p className={`text-xs mt-1 sm:mt-2 ${
                           message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
                         }`}>
@@ -1423,7 +1482,7 @@ export default function FinlandQPage() {
                   >
                     <motion.div className="max-w-[85%] sm:max-w-[80%] bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 shadow-md rounded-2xl px-3 sm:px-4 py-2 sm:py-3 transition-all duration-300">
                       <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
-                        {streamingMessage}
+                        <span dangerouslySetInnerHTML={{ __html: parseMarkdown(streamingMessage) }}></span>
                         <motion.span
                           animate={{ opacity: [1, 0] }}
                           transition={{ duration: 0.8, repeat: Infinity }}

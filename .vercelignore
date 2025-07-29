@@ -17,9 +17,7 @@ data/
 README.md
 SETUP.md
 test-*.txt
-frontend/
-# Complete frontend directory
-frontend/
+
 
 # All Next.js files and directories  
 next.config.js

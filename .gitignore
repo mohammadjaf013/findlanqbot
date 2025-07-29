@@ -107,3 +107,4 @@ Thumbs.db
 
 # Lambda deployment
 function.zip 
+.vercel
