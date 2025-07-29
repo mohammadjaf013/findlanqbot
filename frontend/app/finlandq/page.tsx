@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -580,13 +579,13 @@ export default function FinlandQPage() {
     }
 
     try {
-      const response = await fetch('https://bot-api.finlandq.com/api/rag/ask', {
+      const response = await fetch('https://findlanqbot-backorg2-fyce1jrzb.vercel.app/api/vector/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          question: userMessage.content
+          query: userMessage.content
         })
       });
 

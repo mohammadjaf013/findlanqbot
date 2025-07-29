@@ -29,7 +29,7 @@ export default function UploadTextPage() {
     setUploadResult(null)
 
     try {
-      const response = await fetch('https://bot-api.finlandq.com/api/rag/upload-text', {
+      const response = await fetch('https://findlanqbot-backorg2-fyce1jrzb.vercel.app/api/vector/upload-text', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
