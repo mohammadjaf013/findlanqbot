@@ -1,8 +1,19 @@
 const { isValidFileType, saveUploadedFile, processWordFile, ragQuery, getFilesList, deleteFile } = require('../services/rag');
 const { askGemini } = require('../services/ai');
-const { saveFileAndChunks } = process.env.TURSO_DATABASE_URL 
-  ? require('../services/turso-db') 
-  : require('../services/db');
+
+// انتخاب نوع دیتابیس بر اساس متغیر محیطی (فقط در production)
+let saveFileAndChunks = null;
+
+if (process.env.NODE_ENV === 'production') {
+  if (process.env.TURSO_DATABASE_URL) {
+    const tursoDb = require('../services/turso-db');
+    saveFileAndChunks = tursoDb.saveFileAndChunks;
+  } else {
+    const localDb = require('../services/db');
+    saveFileAndChunks = localDb.saveFileAndChunks;
+  }
+}
+
 const fs = require('fs');
 
 module.exports = (app) => {
@@ -63,6 +74,12 @@ reader.readAsDataURL(file);`,
         }, 400);
       }
 
+      if (!saveFileAndChunks) {
+        return c.json({ 
+          error: 'سرویس دیتابیس در دسترس نیست' 
+        }, 503);
+      }
+
       const fileName = title || `text_${Date.now()}.txt`;
       
       // تقسیم متن به chunks
@@ -96,6 +113,80 @@ reader.readAsDataURL(file);`,
       console.error('Error in /api/rag/upload-text:', error);
       return c.json({ 
         error: error.message || 'خطا در پردازش محتوای متنی' 
+      }, 500);
+    }
+  });
+
+  // Vector upload route - مثل upload-text اما با upstash vector
+  app.post('/api/rag/vector-upload', async (c) => {
+    try {
+      console.log('Starting vector upload...');
+      
+      // Direct Node.js approach - bypass Hono body parsing completely
+      let content, title;
+      
+      // Get the raw Node.js request from Hono context
+      const req = c.req.raw;
+      
+      // Collect chunks manually
+      const chunks = [];
+      let totalLength = 0;
+      
+      if (req.body && typeof req.body.getReader === 'function') {
+        // ReadableStream approach
+        const reader = req.body.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          totalLength += value.length;
+        }
+      } else {
+        // Fallback - try to get body another way
+        return c.json({ 
+          error: 'Unable to read request body' 
+        }, 400);
+      }
+      
+      // Combine chunks
+      const bodyBuffer = new Uint8Array(totalLength);
+      let offset = 0;
+      for (const chunk of chunks) {
+        bodyBuffer.set(chunk, offset);
+        offset += chunk.length;
+      }
+      
+      // Convert to string and parse
+      const bodyText = new TextDecoder().decode(bodyBuffer);
+      console.log('Raw body from stream:', bodyText.substring(0, 100));
+      
+      const parsed = JSON.parse(bodyText);
+      content = parsed.content;
+      title = parsed.title;
+      
+      if (!content || content.trim() === '') {
+        return c.json({ 
+          error: 'محتوای متن الزامی است' 
+        }, 400);
+      }
+
+      const fileName = title || `vector_${Date.now()}.txt`;
+      
+      // Import upstash vector service
+      const { saveFileToVector } = require('../services/upstash-vector');
+      
+      // ذخیره در Upstash Vector
+      const result = await saveFileToVector(fileName, content, {
+        uploadedAt: new Date().toISOString(),
+        source: 'direct_text'
+      });
+
+      return c.json(result);
+
+    } catch (error) {
+      console.error('Error in vector upload:', error);
+      return c.json({ 
+        error: error.message || 'خطا در آپلود vector' 
       }, 500);
     }
   });

@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "framework": null,
   "builds": [
     {
       "src": "src/app.js",
@@ -11,8 +12,5 @@
       "src": "/(.*)",
       "dest": "src/app.js"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }

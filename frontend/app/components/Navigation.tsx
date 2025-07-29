@@ -10,9 +10,9 @@ export default function Navigation() {
   const navItems = [
     { href: '/', label: 'خانه', icon: Home },
     { href: '/finlandq', label: 'چت فنلاند', icon: MessageSquare },
-    { href: '/upload', label: 'آپلود فایل', icon: Upload },
-    { href: '/upload-text', label: 'آپلود متن', icon: Database },
-    { href: '/vector-management', label: 'مدیریت Vector', icon: Settings },
+    // { href: '/upload', label: 'آپلود فایل', icon: Upload },
+    // { href: '/upload-text', label: 'آپلود متن', icon: Database },
+    // { href: '/vector-management', label: 'مدیریت Vector', icon: Settings },
   ];
 
   return (

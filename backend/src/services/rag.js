@@ -4,10 +4,31 @@ const mammoth = require('mammoth');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-// انتخاب نوع دیتابیس بر اساس متغیر محیطی
-const { saveFileAndChunks, searchChunks, getFilesList, deleteFile, getAllChunksWithEmbeddings } = process.env.TURSO_DATABASE_URL 
-  ? require('./turso-db') 
-  : require('./db');
+
+// انتخاب نوع دیتابیس بر اساس متغیر محیطی (فقط در production)
+let saveFileAndChunks = null;
+let searchChunks = null;
+let getFilesList = null;
+let deleteFile = null;
+let getAllChunksWithEmbeddings = null;
+
+if (process.env.NODE_ENV === 'production') {
+  if (process.env.TURSO_DATABASE_URL) {
+    const tursoDb = require('./turso-db');
+    saveFileAndChunks = tursoDb.saveFileAndChunks;
+    searchChunks = tursoDb.searchChunks;
+    getFilesList = tursoDb.getFilesList;
+    deleteFile = tursoDb.deleteFile;
+    getAllChunksWithEmbeddings = tursoDb.getAllChunksWithEmbeddings;
+  } else {
+    const localDb = require('./db');
+    saveFileAndChunks = localDb.saveFileAndChunks;
+    searchChunks = localDb.searchChunks;
+    getFilesList = localDb.getFilesList;
+    deleteFile = localDb.deleteFile;
+    getAllChunksWithEmbeddings = localDb.getAllChunksWithEmbeddings;
+  }
+}
 
 // تنظیمات API کلیدها
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyDaZf6m6Qc-j_Mky9Zk9jRTQPffvYXQd9M';
@@ -121,8 +142,10 @@ async function processWordFile(filePath, fileName) {
     // ایجاد hash برای فایل
     const fileHash = crypto.createHash('md5').update(text).digest('hex');
     
-    // ذخیره در دیتابیس
-    await saveFileAndChunks(fileName, fileHash, chunksWithEmbeddings);
+    // ذخیره در دیتابیس (فقط اگر در دسترس باشد)
+    if (saveFileAndChunks) {
+      await saveFileAndChunks(fileName, fileHash, chunksWithEmbeddings);
+    }
     
     return {
       success: true,
@@ -130,7 +153,7 @@ async function processWordFile(filePath, fileName) {
       chunks: chunks,
       embeddings: chunksWithEmbeddings.length,
       fileHash: fileHash,
-      message: 'فایل با موفقیت پردازش و ذخیره شد'
+      message: saveFileAndChunks ? 'فایل با موفقیت پردازش و ذخیره شد' : 'فایل پردازش شد اما ذخیره نشد (دیتابیس در دسترس نیست)'
     };
   } catch (error) {
     throw new Error(`خطا در پردازش فایل: ${error.message}`);
@@ -144,7 +167,15 @@ async function ragQuery(question) {
     console.log('در حال ایجاد embedding برای سوال...');
     const questionEmbedding = await createEmbedding(question);
     
-    // دریافت همه chunks از دیتابیس
+    // دریافت همه chunks از دیتابیس (فقط اگر در دسترس باشد)
+    if (!getAllChunksWithEmbeddings) {
+      return {
+        success: false,
+        context: [],
+        message: 'دیتابیس در دسترس نیست'
+      };
+    }
+    
     const allChunks = await getAllChunksWithEmbeddings();
     
     if (allChunks.length === 0) {
@@ -184,8 +215,8 @@ module.exports = {
   saveUploadedFile,
   processWordFile,
   ragQuery,
-  getFilesList,
-  deleteFile,
+  getFilesList: getFilesList || (() => Promise.resolve([])),
+  deleteFile: deleteFile || (() => Promise.resolve({ success: false, message: 'دیتابیس در دسترس نیست' })),
   createEmbedding,
   cosineSimilarity
 }; 

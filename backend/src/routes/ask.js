@@ -1,11 +1,25 @@
-// انتخاب نوع دیتابیس بر اساس متغیر محیطی
-const { getAllDocuments } = process.env.TURSO_DATABASE_URL 
-  ? require('../services/turso-db') 
-  : require('../services/db');
+// انتخاب نوع دیتابیس بر اساس متغیر محیطی (فقط در production)
+let getAllDocuments = null;
+let addDocument = null;
+
+if (process.env.NODE_ENV === 'production') {
+  if (process.env.TURSO_DATABASE_URL) {
+    const tursoDb = require('../services/turso-db');
+    getAllDocuments = tursoDb.getAllDocuments;
+    addDocument = tursoDb.addDocument;
+  } else {
+    const localDb = require('../services/db');
+    getAllDocuments = localDb.getAllDocuments;
+    addDocument = localDb.addDocument;
+  }
+}
+
 const { askAI } = require('../services/ai');
+const fs = require('fs');
+const path = require('path');
 
 module.exports = (app) => {
-  // روت اصلی برای پرسش
+  // روت ساده برای پرسش با استفاده از فایل finlandq.txt
   app.post('/api/ask', async (c) => {
     try {
       const { question, model = 'gemini' } = await c.req.json();
@@ -16,25 +30,35 @@ module.exports = (app) => {
         }, 400);
       }
 
-      // دریافت اسناد از دیتابیس
-      const docs = await getAllDocuments();
-      
-      // ارسال به مدل هوش مصنوعی
-      const answer = await askAI(question.trim(), docs, model);
+      console.log(`📋 Simple Ask: "${question}"`);
+
+      // خواندن فایل finlandq.txt
+      let contextFromFile = '';
+      try {
+        const filePath = path.join(__dirname, '../../finlandq.txt');
+        contextFromFile = fs.readFileSync(filePath, 'utf8');
+        console.log(`📖 File loaded: ${contextFromFile.length} characters`);
+      } catch (fileError) {
+        console.error('خطا در خواندن فایل:', fileError);
+        // در صورت عدم دسترسی به فایل، ادامه می‌دهیم با context خالی
+      }
+
+      // ارسال به مدل هوش مصنوعی با context فایل
+      const answer = await askAI(question.trim(), [contextFromFile], model);
       
       return c.json({ 
         success: true,
         question: question.trim(),
         answer,
         model,
-        documentsCount: docs.length
+        contextSource: 'finlandq.txt',
+        contextLength: contextFromFile.length
       });
       
     } catch (error) {
-      
       console.error('Error in /api/ask:', error);
       return c.json({ 
-        error: error.message || 'خطای داخلی سرور' 
+        error: error.message || 'خطا در پردازش سوال' 
       }, 500);
     }
   });
@@ -42,7 +66,10 @@ module.exports = (app) => {
   // روت برای دریافت وضعیت سرویس
   app.get('/api/health', async (c) => {
     try {
-      const docs = await getAllDocuments();
+      let docs = [];
+      if (getAllDocuments) {
+        docs = await getAllDocuments();
+      }
       return c.json({ 
         status: 'healthy',
         documentsCount: docs.length,
@@ -67,9 +94,12 @@ module.exports = (app) => {
         }, 400);
       }
 
-      const { addDocument } = process.env.TURSO_DATABASE_URL 
-        ? require('../services/turso-db') 
-        : require('../services/db');
+      if (!addDocument) {
+        return c.json({ 
+          error: 'سرویس دیتابیس در دسترس نیست' 
+        }, 503);
+      }
+
       const id = await addDocument(content.trim());
       
       return c.json({ 

@@ -580,7 +580,7 @@ export default function FinlandQPage() {
     }
 
     try {
-      const response = await fetch('https://bot-api.finlandq.com/api/rag/ask', {
+      const response = await fetch('https://bot-api.finlandq.com/api/ask', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

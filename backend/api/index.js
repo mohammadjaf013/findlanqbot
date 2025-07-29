@@ -4,6 +4,7 @@ const { logger } = require('hono/logger');
 const { fileUploadMiddleware } = require('../src/middleware/fileUpload');
 const askRoutes = require('../src/routes/ask');
 const ragRoutes = require('../src/routes/rag');
+const vectorApiRoutes = require('../src/routes/vector-api');
 
 // ایجاد اپلیکیشن Hono
 const app = new Hono();
@@ -46,7 +47,7 @@ app.use('*', async (c, next) => {
 
 // File upload middleware - disabled, using Hono's built-in formData
 // app.use('*', fileUploadMiddleware());
-
+console.log('index mikone')
 // روت اصلی
 app.get('/', (c) => {
   return c.json({
@@ -59,10 +60,20 @@ app.get('/', (c) => {
       documents: '/api/documents (POST)',
       rag: {
         upload: '/api/rag/upload (POST)',
+        uploadText: '/api/rag/upload-text (POST)',
         ask: '/api/rag/ask (POST)',
         test: '/api/rag/test (POST)',
         files: '/api/rag/files (GET)',
         deleteFile: '/api/rag/files/:fileName (DELETE)'
+      },
+      vector: {
+        upload: '/api/vector/upload (POST)',
+        uploadText: '/api/vector/upload-text (POST)',
+        search: '/api/vector/search (POST)',
+        files: '/api/vector/files (GET)',
+        deleteFile: '/api/vector/files/:fileName (DELETE)',
+        stats: '/api/vector/stats (GET)',
+        health: '/api/vector/health (GET)'
       }
     }
   });
@@ -83,6 +94,7 @@ app.get('/api', (c) => {
 // اضافه کردن روت‌های API
 askRoutes(app);
 ragRoutes(app);
+vectorApiRoutes(app);
 
 // مدیریت خطاها
 app.onError((err, c) => {

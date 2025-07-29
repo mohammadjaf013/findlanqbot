@@ -18,9 +18,11 @@ interface SearchResult {
 }
 
 interface Stats {
-  totalVectors: number;
-  totalFiles: number;
-  averageChunksPerFile: number;
+  dimension: number;
+  vectorCount: number | string;
+  status: string;
+  indexName?: string;
+  error?: string;
 }
 
 export default function VectorManagementPage() {
@@ -93,8 +95,8 @@ export default function VectorManagementPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text: textUpload.text,
-          fileName: textUpload.fileName || `text-${Date.now()}.txt`
+          content: textUpload.text,
+          title: textUpload.fileName
         })
       });
 
@@ -364,14 +366,14 @@ export default function VectorManagementPage() {
                   <form onSubmit={handleTextUpload} className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        نام فایل (اختیاری)
+                        عنوان
                       </label>
                       <input
                         type="text"
                         value={textUpload.fileName}
                         onChange={(e) => setTextUpload({ ...textUpload, fileName: e.target.value })}
                         placeholder="نام فایل را وارد کنید"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 text-black py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
                     <div>
@@ -383,7 +385,7 @@ export default function VectorManagementPage() {
                         onChange={(e) => setTextUpload({ ...textUpload, text: e.target.value })}
                         placeholder="متن مورد نظر را وارد کنید..."
                         rows={8}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         required
                       />
                     </div>
@@ -413,10 +415,11 @@ export default function VectorManagementPage() {
                     </label>
                     <input
                       type="text"
+
                       value={searchQuery.query}
                       onChange={(e) => setSearchQuery({ ...searchQuery, query: e.target.value })}
                       placeholder="سوال خود را وارد کنید..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
                   </div>
@@ -430,7 +433,7 @@ export default function VectorManagementPage() {
                       onChange={(e) => setSearchQuery({ ...searchQuery, limit: parseInt(e.target.value) })}
                       min="1"
                       max="20"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 text-black py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -442,7 +445,7 @@ export default function VectorManagementPage() {
                       value={searchQuery.fileName}
                       onChange={(e) => setSearchQuery({ ...searchQuery, fileName: e.target.value })}
                       placeholder="نام فایل"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -491,7 +494,7 @@ export default function VectorManagementPage() {
                       </div>
                       <div className="mr-4">
                         <p className="text-sm font-medium text-blue-600">کل Vectors</p>
-                        <p className="text-2xl font-bold text-blue-900">{stats.totalVectors.toLocaleString()}</p>
+                        <p className="text-2xl font-bold text-blue-900">{stats.vectorCount}</p>
                       </div>
                     </div>
                   </div>
@@ -502,8 +505,8 @@ export default function VectorManagementPage() {
                         <FileText size={24} className="text-green-600" />
                       </div>
                       <div className="mr-4">
-                        <p className="text-sm font-medium text-green-600">کل فایل‌ها</p>
-                        <p className="text-2xl font-bold text-green-900">{stats.totalFiles}</p>
+                        <p className="text-sm font-medium text-green-600">Dimension</p>
+                        <p className="text-2xl font-bold text-green-900">{stats.dimension}</p>
                       </div>
                     </div>
                   </div>
@@ -514,13 +517,41 @@ export default function VectorManagementPage() {
                         <List size={24} className="text-purple-600" />
                       </div>
                       <div className="mr-4">
-                        <p className="text-sm font-medium text-purple-600">میانگین Chunks</p>
+                        <p className="text-sm font-medium text-purple-600">وضعیت</p>
                         <p className="text-2xl font-bold text-purple-900">
-                          {stats.averageChunksPerFile.toFixed(1)}
+                          {stats.status}
                         </p>
                       </div>
                     </div>
                   </div>
+                  
+                  {stats.indexName && (
+                    <div className="bg-gray-50 p-6 rounded-lg">
+                      <div className="flex items-center">
+                        <div className="p-2 bg-gray-100 rounded-lg">
+                          <BarChart3 size={24} className="text-gray-600" />
+                        </div>
+                        <div className="mr-4">
+                          <p className="text-sm font-medium text-gray-600">نام Index</p>
+                          <p className="text-lg font-bold text-gray-900">{stats.indexName}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {stats.error && (
+                    <div className="bg-red-50 p-6 rounded-lg">
+                      <div className="flex items-center">
+                        <div className="p-2 bg-red-100 rounded-lg">
+                          <AlertCircle size={24} className="text-red-600" />
+                        </div>
+                        <div className="mr-4">
+                          <p className="text-sm font-medium text-red-600">خطا</p>
+                          <p className="text-sm text-red-900">{stats.error}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-12">
