@@ -6,15 +6,19 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyDaZf6m6Qc-j_Mky9Zk9j
 // راه‌اندازی Google Generative AI
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-// درخواست به Gemini
-async function askGemini(question, docs) {
+// درخواست به Gemini با retry mechanism
+async function askGemini(question, docs, retryCount = 0) {
+  const maxRetries = 3;
+  const retryDelay = Math.pow(2, retryCount) * 1000; // Exponential backoff: 1s, 2s, 4s
+  
   try {
     if (!GEMINI_API_KEY) {
       throw new Error('GEMINI_API_KEY not found in environment variables');
     }
     console.log("GEMINI_API_KEY",GEMINI_API_KEY)
-    // انتخاب مدل
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    
+    // انتخاب مدل - تغییر به مدل معتبر
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const context = docs.length > 0 && docs[0] ? `\n\nاطلاعات مرجع (از این اطلاعات برای پاسخ استفاده کن):\n${docs.join('\n\n')}` : '';
     
@@ -43,8 +47,22 @@ ${context}
     return response.text();
 
   } catch (error) {
-    console.error('Error calling Gemini API:', error.message);
-    throw new Error('خطا در ارتباط با مدل هوش مصنوعی');
+    console.error(`Error calling Gemini API (attempt ${retryCount + 1}):`, error.message);
+    
+    // اگر خطای 503 (Service Unavailable) یا 429 (Rate Limit) باشد، retry کن
+    if ((error.status === 503 || error.status === 429 || error.message.includes('overloaded')) && retryCount < maxRetries) {
+      console.log(`⏳ Retrying in ${retryDelay}ms... (attempt ${retryCount + 1}/${maxRetries})`);
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+      return await askGemini(question, docs, retryCount + 1);
+    }
+    
+    // اگر retry ها تمام شد یا خطای دیگری بود
+    if (retryCount >= maxRetries) {
+      console.error('❌ Max retries reached. Service unavailable.');
+      throw new Error('سرویس هوش مصنوعی در حال حاضر در دسترس نیست. لطفاً چند دقیقه دیگر تلاش کنید.');
+    } else {
+      throw new Error('خطا در ارتباط با مدل هوش مصنوعی');
+    }
   }
 }
 
