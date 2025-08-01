@@ -20,7 +20,7 @@
     "copilotkit": "^0.0.45",
     "framer-motion": "^12.23.9",
     "lucide-react": "^0.292.0",
-    "next": "15.1.4",
+    "next": "15.2.4",
     "react": "^18",
     "react-dom": "^18"
   },
