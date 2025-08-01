@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست Session Management</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .session-id {
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 تست Session Management</h1>
+    
+    <div class="container">
+        <h2>1. بررسی وضعیت Session Management</h2>
+        <button onclick="checkSessionStatus()">بررسی وضعیت</button>
+        <div id="statusResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>2. تست Session Management</h2>
+        <button onclick="testSessionManagement()">اجرای تست</button>
+        <div id="testResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>3. ایجاد Session جدید</h2>
+        <button onclick="createNewSession()">ایجاد Session</button>
+        <div id="createResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>4. ارسال سوال (بدون Session)</h2>
+        <textarea id="question1" placeholder="سوال خود را بنویسید..." rows="3"></textarea>
+        <button onclick="askQuestionWithoutSession()">ارسال سوال</button>
+        <div id="askResult1" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>5. ارسال سوال (با Session)</h2>
+        <input type="text" id="sessionId" placeholder="Session ID (اختیاری)">
+        <textarea id="question2" placeholder="سوال خود را بنویسید..." rows="3"></textarea>
+        <button onclick="askQuestionWithSession()">ارسال سوال</button>
+        <div id="askResult2" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>6. دریافت تاریخچه Session</h2>
+        <input type="text" id="historySessionId" placeholder="Session ID">
+        <button onclick="getSessionHistory()">دریافت تاریخچه</button>
+        <div id="historyResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://bot-api.finlandq.com';
+
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                return { success: response.ok, data, status: response.status };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        function displayResult(elementId, result, isError = false) {
+            const element = document.getElementById(elementId);
+            element.className = `result ${isError ? 'error' : 'success'}`;
+            element.textContent = JSON.stringify(result, null, 2);
+        }
+
+        async function checkSessionStatus() {
+            const result = await makeRequest(`${API_BASE}/api/session/status`);
+            displayResult('statusResult', result, !result.success);
+        }
+
+        async function testSessionManagement() {
+            const result = await makeRequest(`${API_BASE}/api/session/test`);
+            displayResult('testResult', result, !result.success);
+        }
+
+        async function createNewSession() {
+            const result = await makeRequest(`${API_BASE}/api/session/new`, {
+                method: 'POST',
+                body: JSON.stringify({})
+            });
+            displayResult('createResult', result, !result.success);
+            
+            if (result.success && result.data.session) {
+                document.getElementById('sessionId').value = result.data.session.id;
+            }
+        }
+
+        async function askQuestionWithoutSession() {
+            const question = document.getElementById('question1').value;
+            if (!question.trim()) {
+                displayResult('askResult1', { error: 'لطفاً سوالی بنویسید' }, true);
+                return;
+            }
+
+            const result = await makeRequest(`${API_BASE}/api/ask`, {
+                method: 'POST',
+                body: JSON.stringify({ question })
+            });
+            displayResult('askResult1', result, !result.success);
+        }
+
+        async function askQuestionWithSession() {
+            const question = document.getElementById('question2').value;
+            const sessionId = document.getElementById('sessionId').value;
+            
+            if (!question.trim()) {
+                displayResult('askResult2', { error: 'لطفاً سوالی بنویسید' }, true);
+                return;
+            }
+
+            const body = { question };
+            if (sessionId.trim()) {
+                body.sessionId = sessionId;
+            }
+
+            const result = await makeRequest(`${API_BASE}/api/ask`, {
+                method: 'POST',
+                body: JSON.stringify(body)
+            });
+            displayResult('askResult2', result, !result.success);
+            
+            if (result.success && result.data.sessionId) {
+                document.getElementById('sessionId').value = result.data.sessionId;
+            }
+        }
+
+        async function getSessionHistory() {
+            const sessionId = document.getElementById('historySessionId').value;
+            if (!sessionId.trim()) {
+                displayResult('historyResult', { error: 'لطفاً Session ID را وارد کنید' }, true);
+                return;
+            }
+
+            const result = await makeRequest(`${API_BASE}/api/session/${sessionId}/history`);
+            displayResult('historyResult', result, !result.success);
+        }
+
+        // اجرای خودکار تست وضعیت در بارگذاری صفحه
+        window.onload = function() {
+            checkSessionStatus();
+        };
+    </script>
+</body>
+</html> 

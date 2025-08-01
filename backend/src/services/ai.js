@@ -1,100 +1,118 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// تنظیمات API کلیدها - برای Bun
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyDaZf6m6Qc-j_Mky9Zk9jRTQPffvYXQd9M';
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// راه‌اندازی Google Generative AI
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+// تابع تشخیص copilot actions در متن AI
+function extractCopilotActions(aiResponse) {
+  const actions = [];
+  
+  // Pattern برای تشخیص action commands
+  const actionPatterns = [
+    {
+      pattern: /\[COPILOT_ACTION:CONSULTATION_REQUEST\]/g,
+      action: { type: 'consultation_request', requireConfirmation: true }
+    },
+    {
+      pattern: /\[COPILOT_ACTION:OPEN_FORM\]/g,
+      action: { type: 'open_form', formType: 'consultation' }
+    },
+    {
+      pattern: /\[COPILOT_ACTION:CONFIRM_ACTION\]/g,
+      action: { type: 'confirm_action', message: 'آیا مطمئن هستید؟' }
+    },
+    {
+      pattern: /\[COPILOT_ACTION:SHOW_QUICK_REPLY:([^\]]+)\]/g,
+      action: { type: 'show_quick_reply', options: [] }
+    }
+  ];
+  
+  let cleanResponse = aiResponse;
+  
+  actionPatterns.forEach(({ pattern, action }) => {
+    const matches = [...aiResponse.matchAll(pattern)];
+    if (matches.length > 0) {
+      matches.forEach(match => {
+        if (action.type === 'show_quick_reply') {
+          const options = match[1].split(',').map(opt => opt.trim());
+          actions.push({ ...action, options });
+        } else {
+          actions.push(action);
+        }
+      });
+      
+      // حذف action commands از متن نهایی
+      cleanResponse = cleanResponse.replace(pattern, '').trim();
+    }
+  });
+  
+  return { 
+    response: cleanResponse, 
+    actions: actions 
+  };
+}
 
-// درخواست به Gemini
 async function askGemini(question, docs) {
   try {
-    if (!GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY not found in environment variables');
-    }
-    console.log("GEMINI_API_KEY",GEMINI_API_KEY)
-    // انتخاب مدل
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
+    
     const context = docs.length > 0 && docs[0] ? `\n\nاطلاعات مرجع (از این اطلاعات برای پاسخ استفاده کن):\n${docs.join('\n\n')}` : '';
     
     const prompt = `شما دستیار هوشمند فنلاند کیو هستید که در زمینه مهاجرت، تحصیل، کار و زندگی در فنلاند تخصص دارید.
 
 قوانین مهم:
-- اسم تو کیو هست و دستیار هوشمند فنلاند کیو هستی
-- همیشه به زبان راحت و ساده پاسخ دهید
-- مثل یک مشاور حرفه ای باشید و به سوالات کاربر پاسخ دهید
-- تو داری محصولات فنلاند کیو رو توضیح میدی پس مثل یک مشاور و یک فروشنده متخصص باید رفتار کنی اما لحن عامیانه
-- از اموجی استفاده کن حتما 
-- سعی کن از اطلاعات که داری کامل مشتری رو بفهمونی
-- هرگز اشاره نکنید که "بر اساس متن‌های ارائه شده" یا "با توجه به اطلاعات موجود"
-- پاسخ را طوری بدهید که انگار خودتان این اطلاعات را می‌دانید
-- اگر اطلاعات کافی ندارید، به کاربر بگویید: "برای اطلاعات تکمیلی با پشتیبانی شماره 88888888 تماس بگیرید"
-- از اطلاعات مرجع ارائه شده برای پاسخ دقیق و کامل استفاده کن
+
+تو یک دستیار هوشمند هستی با نام «کیو»، نماینده رسمی برند فنلاند کیو.
+نقش تو مشاور حرفه‌ای و فروشنده متخصص محصولات این برند هست.
+
+قوانین اصلی:
+- همیشه با لحن صمیمی، ساده و قابل فهم صحبت کن 😄
+- از ایموجی‌ها استفاده کن تا حس راحتی و دوستی منتقل شه ✨
+- مثل یه مشاور دلسوز و کاربلد جواب بده؛ کسی که کاملاً محصولات رو می‌شناسه
+- هدف تو کمک به کاربر برای انتخاب محصول مناسبشه، نه صرفاً فروش
+- از اطلاعات کامل استفاده کن تا همه‌چیز رو دقیق و واضح توضیح بدی
+- هیچ‌وقت نگویید "بر اساس اطلاعات داده‌شده" یا "طبق متن بالا" ❌
+- اگر اطلاعات کافی نداری، بگو: «برای اطلاعات بیشتر، لطفاً فرم درخواست مشاوره رو پر کن 💬»
+- فقط درباره محصولات برند فنلاند کیو و کاروانونچر صحبت کن، نه برندهای دیگه
+- هر سوالی رو با دقت بخون، نیاز کاربر رو بفهم، بعد پاسخ بده اگر نیاز شد چند سوال بپرس که متوجه بشی نیاز کاربر کدام محصول هست بعد تعریف کن براش محصول رو✅
+- یادت نره: تو کیو هستی، و همه چیز درباره فنلاند کیو رو بلدی 💙
+
+
+قوانین کنترل Copilot:
+- اگر کاربر درخواست مشاوره کرد (مثل "مشاوره می‌خوام"، "نیاز به راهنمایی دارم"، "کمک می‌خوام"), در پایان پاسخ [COPILOT_ACTION:CONSULTATION_REQUEST] اضافه کن
+- اگر کاربر سوال پیچیده‌ای پرسید که نیاز به مشاوره شخصی دارد، [COPILOT_ACTION:CONSULTATION_REQUEST] اضافه کن
+- اگر کاربر مشخصات شخصی (سن، تحصیلات، وضعیت) گفت، [COPILOT_ACTION:CONSULTATION_REQUEST] اضافه کن
 
 سوال: ${question}
 ${context}
 
 پاسخ:`;
 
-    // تولید پاسخ
     const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
-
-  } catch (error) {
-    console.error('Error calling Gemini API:', error.message);
-    throw new Error('خطا در ارتباط با مدل هوش مصنوعی');
-  }
-}
-
-// ایجاد embedding برای متن
-async function createEmbedding(text) {
-  try {
-    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
-    const result = await model.embedContent(text);
-    return result.embedding.values;
-  } catch (error) {
-    console.log('خطا در embedding:', error.message);
-    // fallback به vector تصادفی برای تست
-    return Array.from({length: 768}, () => Math.random());
-  }
-}
-
-// ایجاد embeddings برای آرایه‌ای از متن‌ها
-async function createEmbeddings(texts) {
-  const chunksWithEmbeddings = [];
-  
-  console.log(`در حال ایجاد embeddings برای ${texts.length} chunk...`);
-  
-  for (let i = 0; i < texts.length; i++) {
-    console.log(`پردازش chunk ${i + 1}/${texts.length}`);
-    const embedding = await createEmbedding(texts[i]);
-    chunksWithEmbeddings.push({
-      text: texts[i],
-      embedding: embedding
-    });
+    const aiResponse = result.response.text();
     
-    // کمی صبر برای جلوگیری از rate limiting
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Extract copilot actions
+    const { response, actions } = extractCopilotActions(aiResponse);
+    
+    if (actions.length > 0) {
+      console.log(`🎯 Copilot Actions detected:`, actions);
+      return { text: response, copilotActions: actions };
+    }
+    
+    return { text: response, copilotActions: [] };
+    
+  } catch (error) {
+    console.error('خطا در Google AI:', error);
+    return { 
+      text: 'متأسفم، خطایی رخ داده است. برای اطلاعات تکمیلی با پشتیبانی شماره 91691021 تماس بگیرید.',
+      copilotActions: []
+    };
   }
-  
-  return chunksWithEmbeddings;
 }
 
-// تابع عمومی برای پرسش (قابل گسترش برای مدل‌های دیگر)
+// Alias برای سازگاری با کدهای قدیمی
 async function askAI(question, docs, model = 'gemini') {
-  switch (model.toLowerCase()) {
-    case 'gemini':
-      return await askGemini(question, docs);
-    // در آینده می‌توانید مدل‌های دیگر را اضافه کنید
-    // case 'kimi':
-    //   return await askKimi(question, docs);
-    // case 'sonat':
-    //   return await askSonat(question, docs);
-    default:
-      throw new Error(`مدل ${model} پشتیبانی نمی‌شود`);
-  }
+  const result = await askGemini(question, docs);
+  return result.text; // فقط متن برمیگردونه برای compatibility
 }
 
-module.exports = { askAI, askGemini, createEmbedding, createEmbeddings }; 
+module.exports = { askGemini, askAI, extractCopilotActions }; 

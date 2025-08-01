@@ -1,5 +1,12 @@
 const { saveFileToVector, searchInVector, getFilesList, deleteFileFromVector, getVectorStats } = require('../services/upstash-vector');
 const { askGemini } = require('../services/ai');
+const { 
+  createSession, 
+  getSession, 
+  addMessageToSession, 
+  getConversationHistory, 
+  buildContextFromHistory 
+} = require('../services/session');
 
 module.exports = (app) => {
 
@@ -161,10 +168,10 @@ app.get('/api/vector/health', async (c) => {
   }
 });
 
-// پرسش از Upstash Vector + AI
+// پرسش از Upstash Vector + AI + Session Management
 app.post('/api/vector/ask', async (c) => {
   try {
-    const { question, limit = 5 } = await c.req.json();
+    const { question, limit = 5, sessionId } = await c.req.json();
     
     if (!question || question.trim() === '') {
       return c.json({ 
@@ -172,7 +179,20 @@ app.post('/api/vector/ask', async (c) => {
       }, 400);
     }
 
-    console.log(`🔍 Vector Ask: "${question}"`);
+    // اگر sessionId داده نشده، یکی جدید بساز
+    let currentSession;
+    if (sessionId) {
+      currentSession = getSession(sessionId);
+      if (!currentSession) {
+        return c.json({ 
+          error: 'Session یافت نشد' 
+        }, 404);
+      }
+    } else {
+      currentSession = createSession();
+    }
+
+    console.log(`🔍 Vector Ask with Session: "${question}" (Session: ${currentSession.id})`);
 
     // جستجو در Upstash Vector
     const searchResult = await searchInVector(question, limit);
@@ -184,19 +204,45 @@ app.post('/api/vector/ask', async (c) => {
     }
 
     // استخراج متن‌های مرتبط برای context
-    const context = searchResult.results.map(result => result.text);
+    const vectorContext = searchResult.results.map(result => result.text);
     
-    console.log(`📄 Found ${context.length} relevant chunks`);
+    // ساخت context از تاریخچه مکالمه
+    const conversationContext = buildContextFromHistory(currentSession.id, false);
 
-    // ارسال به Gemini AI
-    const answer = await askGemini(question.trim(), context);
+    // ترکیب vector context و تاریخچه مکالمه
+    const fullContext = [
+      ...vectorContext,
+      conversationContext
+    ].filter(ctx => ctx && typeof ctx === 'string' && ctx.trim().length > 0);
+    
+    console.log(`📄 Found ${vectorContext.length} relevant chunks + conversation history`);
+
+    // ذخیره سوال کاربر در session
+    addMessageToSession(currentSession.id, 'user', question.trim());
+
+    const aiResult = await askGemini(question.trim(), fullContext);
+    
+    // Check if AI response contains copilot actions
+    const answer = typeof aiResult === 'string' ? aiResult : aiResult.text;
+    const copilotActions = typeof aiResult === 'object' ? aiResult.copilotActions || [] : [];
+
+    addMessageToSession(currentSession.id, 'assistant', answer, {
+      model: 'gemini',
+      searchMethod: 'upstash-vector',
+      chunksUsed: vectorContext.length,
+      conversationLength: conversationContext.length,
+      copilotActions: copilotActions
+    });
 
     return c.json({
       success: true,
+      sessionId: currentSession.id,
       question: question.trim(),
       answer: answer,
-      context: context,
-      chunksUsed: context.length,
+      copilotActions: copilotActions, // Frontend میتونه این actions رو پردازش کنه
+      context: vectorContext,
+      chunksUsed: vectorContext.length,
+      conversationHistory: getConversationHistory(currentSession.id, 5),
       searchResults: searchResult.results.map(r => ({
         text: r.text.substring(0, 200) + '...',
         score: r.score,

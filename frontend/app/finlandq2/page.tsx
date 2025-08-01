@@ -5,12 +5,21 @@ import { Send, MessageCircle, Sparkles, Globe, Users, Star, ArrowLeft } from 'lu
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
+// API-Driven Copilot Control Interface
+interface CopilotAction {
+  type: 'consultation_request' | 'open_form' | 'confirm_action' | 'show_quick_reply';
+  requireConfirmation?: boolean;
+  message?: string;
+  formType?: string;
+  options?: string[];
+}
 
 interface Message {
   id: string;
   type: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  copilotActions?: CopilotAction[]; // اضافه شد
 }
 
 interface ConsultationFormData {
@@ -467,6 +476,9 @@ const parseMarkdown = (text: string) => {
 };
 
 export default function FinlandQPage() {
+  // Session Management
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -479,10 +491,74 @@ export default function FinlandQPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   
+  // Auto-scroll management
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const [lastScrollTop, setLastScrollTop] = useState(0);
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Initialize or restore session
+  useEffect(() => {
+    const storedSessionId = localStorage.getItem('finlandq2-session-id');
+    if (storedSessionId) {
+      setSessionId(storedSessionId);
+      console.log('📱 Restored session (Vector):', storedSessionId);
+      // TODO: بارگذاری تاریخچه مکالمه از سرور
+    } else {
+      createNewSession();
+    }
+  }, []);
+
+  // Create new session
+  const createNewSession = async () => {
+    try {
+      const response = await fetch('https://bot-api.finlandq.com/api/session/new', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setSessionId(data.session.id);
+        localStorage.setItem('finlandq2-session-id', data.session.id);
+        console.log('🆔 New session created (Vector):', data.session.id);
+      } else {
+        console.error('خطا در ایجاد session:', data.error);
+      }
+    } catch (error) {
+      console.error('خطا در ایجاد session:', error);
+    }
+  };
+
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (!isUserScrolling) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Handle scroll detection
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    const scrollTop = container.scrollTop;
+    const scrollHeight = container.scrollHeight;
+    const clientHeight = container.clientHeight;
+    
+    // Check if user is near bottom (within 100px)
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+    
+    // Detect if user is manually scrolling up
+    if (scrollTop < lastScrollTop && !isNearBottom) {
+      setIsUserScrolling(true);
+    } else if (isNearBottom) {
+      setIsUserScrolling(false);
+    }
+    
+    setLastScrollTop(scrollTop);
   };
 
   useEffect(() => {
@@ -586,13 +662,21 @@ export default function FinlandQPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          question: userMessage.content
+          question: userMessage.content,
+          sessionId: sessionId,
+          useLangChain: true  // استفاده از LangChain
         })
       });
 
       const data = await response.json();
       
       if (data.success) {
+        // به‌روزرسانی sessionId در صورت دریافت یکی جدید
+        if (data.sessionId && data.sessionId !== sessionId) {
+          setSessionId(data.sessionId);
+          localStorage.setItem('finlandq2-session-id', data.sessionId);
+        }
+        
         // استفاده از streaming به جای نمایش مستقیم
         setIsLoading(false);
         simulateStreaming(data.answer);
@@ -601,7 +685,7 @@ export default function FinlandQPage() {
       }
     } catch (error) {
       setIsLoading(false);
-      simulateStreaming('متأسفم، خطایی رخ داده است. برای اطلاعات تکمیلی با پشتیبانی شماره 91691021 تماس بگیرید.');
+      simulateStreaming('متأسفم، خطایی رخ داده است. برای اطلاعات تکمیلی با پشتیبانی شماره 91691021  تماس بگیرید.');
     }
   };
 
@@ -618,10 +702,12 @@ export default function FinlandQPage() {
         setStreamingMessage(prev => prev + text[index]);
         index++;
         
-        // Scroll to bottom
-        setTimeout(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 50);
+        // Smart scroll - only scroll if user is not manually scrolling
+        if (!isUserScrolling) {
+          setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+          }, 50);
+        }
       } else {
         clearInterval(interval);
         setIsStreaming(false);
@@ -1397,26 +1483,59 @@ export default function FinlandQPage() {
                 animate={{ y: 0, opacity: 1 }}
                 className="bg-gradient-to-r from-[#4385f6] to-blue-600 p-3 sm:p-4 text-white"
               >
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <motion.div 
-                    // animate={{ rotate: 360 }}
-                    // transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    className="w-10 h-10 sm:w-10 sm:h-10 bg-white/60 rounded-full flex items-center justify-center"
-                  >
-                    {/* <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" /> */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <motion.div 
+                      // animate={{ rotate: 360 }}
+                      // transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                      className="w-10 h-10 sm:w-10 sm:h-10 bg-white/60 rounded-full flex items-center justify-center"
+                    >
+                      {/* <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" /> */}
 
-                    <img src="q.png" className='w-full h-full object-contain text-white' />
+                      <img src="q.png" className='w-full h-full object-contain text-white' />
 
-                  </motion.div>
-                  <div>
-                    <h2 className="font-semibold text-sm sm:text-base">چت با دستیار فنلاند کیو</h2>
-                    <p className="text-xs opacity-90 hidden sm:block">آماده پاسخگویی به سوالات شما</p>
+                    </motion.div>
+                    <div>
+                      <h2 className="font-semibold text-sm sm:text-base">چت با دستیار فنلاند کیو (Vector)</h2>
+                      <p className="text-xs opacity-90 hidden sm:block">آماده پاسخگویی به سوالات شما</p>
+                    </div>
+                  </div>
+                  
+                  {/* Session Controls */}
+                  <div className="flex items-center gap-2">
+                    {sessionId && (
+                      <span className="text-xs opacity-75 hidden md:block">
+                        ID: {sessionId.slice(-8)}
+                      </span>
+                    )}
+                    <button
+                      onClick={() => {
+                        if (confirm('آیا می‌خواهید مکالمه جدیدی شروع کنید؟')) {
+                          localStorage.removeItem('finlandq2-session-id');
+                          setMessages([{
+                            id: '1',
+                            type: 'assistant',
+                            content: 'سلام! من دستیار هوشمند فنلاند کیو هستم. برای راهنمایی در مورد مهاجرت، تحصیل و کار در فنلاند آماده‌ام.\n\n💡 **نکته:** اگر نیاز به مشاوره دارید، فقط کافیه بنویسید "مشاوره می‌خوام" یا "نیاز به راهنمایی دارم" و من خودکار فرم مشاوره را برایتان باز می‌کنم!\n\nچطور می‌تونم کمکتون کنم؟',
+                            timestamp: new Date()
+                          }]);
+                          createNewSession();
+                        }
+                      }}
+                      className="p-2 hover:bg-white/20 rounded-lg transition-colors text-xs"
+                      title="شروع مکالمه جدید"
+                    >
+                      🔄
+                    </button>
                   </div>
                 </div>
               </motion.div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4">
+              <div 
+                ref={scrollContainerRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4"
+              >
                 <AnimatePresence>
                   {messages.map((message) => (
                     <motion.div

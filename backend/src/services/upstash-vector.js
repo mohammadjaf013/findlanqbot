@@ -57,6 +57,36 @@ async function splitText(text) {
   return chunks.filter(chunk => chunk.trim().length > 50);
 }
 
+// ایجاد embeddings برای آرایه‌ای از chunks
+async function createEmbeddings(chunks) {
+  try {
+    console.log(`🔧 Creating embeddings for ${chunks.length} chunks...`);
+    const chunksWithEmbeddings = [];
+    
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const embedding = await createEmbedding(chunk);
+      
+      chunksWithEmbeddings.push({
+        text: chunk,
+        embedding: embedding,
+        index: i
+      });
+      
+      // کمی صبر برای جلوگیری از rate limiting
+      if (i % 10 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+    
+    console.log(`✅ Created embeddings for ${chunksWithEmbeddings.length} chunks`);
+    return chunksWithEmbeddings;
+  } catch (error) {
+    console.error('خطا در ایجاد embeddings:', error);
+    throw new Error(`خطا در ایجاد embeddings: ${error.message}`);
+  }
+}
+
 // ذخیره فایل در Upstash Vector
 async function saveFileToVector(fileName, text, metadata = {}) {
   try {
@@ -257,5 +287,6 @@ module.exports = {
   deleteFileFromVector,
   getVectorStats,
   createEmbedding,
+  createEmbeddings,
   splitText
 };

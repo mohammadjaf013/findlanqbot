@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست Session Debug</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .warning {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+        .log {
+            background: #e9ecef;
+            border-color: #dee2e6;
+            color: #495057;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🐛 تست Session Debug</h1>
+    
+    <div class="container">
+        <h2>1. تست CORS و اتصال</h2>
+        <button onclick="testCORS()">تست CORS</button>
+        <button onclick="testHealth()">تست Health</button>
+        <div id="corsResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>2. تست Session Management</h2>
+        <button onclick="testSessionStatus()">تست وضعیت Session</button>
+        <button onclick="createSession()">ایجاد Session</button>
+        <button onclick="testSession()">تست Session</button>
+        <div id="sessionResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>3. تست Ask Endpoint</h2>
+        <button onclick="testAskWithoutSession()">تست Ask (بدون Session)</button>
+        <button onclick="testAskWithSession()">تست Ask (با Session)</button>
+        <div id="askResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>4. Logs</h2>
+        <button onclick="clearLogs()">پاک کردن Logs</button>
+        <div id="logs" class="result log"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://bot-api.finlandq.com';
+        let currentSessionId = null;
+
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            logsDiv.textContent += logEntry;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function displayResult(elementId, result, isError = false, isWarning = false) {
+            const element = document.getElementById(elementId);
+            let className = 'result';
+            if (isError) className += ' error';
+            else if (isWarning) className += ' warning';
+            else className += ' success';
+            
+            element.className = className;
+            element.textContent = JSON.stringify(result, null, 2);
+        }
+
+        async function makeRequest(url, options = {}) {
+            try {
+                log(`📡 Request: ${options.method || 'GET'} ${url}`);
+                if (options.body) {
+                    log(`📤 Body: ${options.body}`);
+                }
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                log(`📥 Response status: ${response.status}`);
+                log(`📥 Response headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`);
+                
+                const data = await response.json();
+                log(`📥 Response data: ${JSON.stringify(data)}`);
+                
+                return { success: response.ok, data, status: response.status };
+            } catch (error) {
+                log(`❌ Error: ${error.message}`);
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function testCORS() {
+            log('🧪 Testing CORS...');
+            const result = await makeRequest(`${API_BASE}/test`);
+            displayResult('corsResult', result, !result.success);
+        }
+
+        async function testHealth() {
+            log('🏥 Testing Health...');
+            const result = await makeRequest(`${API_BASE}/api/health`);
+            displayResult('corsResult', result, !result.success);
+        }
+
+        async function testSessionStatus() {
+            log('📊 Testing Session Status...');
+            const result = await makeRequest(`${API_BASE}/api/session/status`);
+            displayResult('sessionResult', result, !result.success);
+        }
+
+        async function createSession() {
+            log('🆔 Creating new session...');
+            const result = await makeRequest(`${API_BASE}/api/session/new`, {
+                method: 'POST',
+                body: JSON.stringify({})
+            });
+            
+            if (result.success && result.data.session) {
+                currentSessionId = result.data.session.id;
+                log(`✅ Session created: ${currentSessionId}`);
+            }
+            
+            displayResult('sessionResult', result, !result.success);
+        }
+
+        async function testSession() {
+            if (!currentSessionId) {
+                displayResult('sessionResult', { error: 'No session ID available. Create a session first.' }, true);
+                return;
+            }
+            
+            log(`🧪 Testing session: ${currentSessionId}`);
+            const result = await makeRequest(`${API_BASE}/api/session/test`);
+            displayResult('sessionResult', result, !result.success);
+        }
+
+        async function testAskWithoutSession() {
+            log('❓ Testing Ask without session...');
+            const result = await makeRequest(`${API_BASE}/api/ask`, {
+                method: 'POST',
+                body: JSON.stringify({ question: 'سلام' })
+            });
+            
+            if (result.success && result.data.sessionId) {
+                currentSessionId = result.data.sessionId;
+                log(`✅ Session ID received: ${currentSessionId}`);
+            }
+            
+            displayResult('askResult', result, !result.success);
+        }
+
+        async function testAskWithSession() {
+            if (!currentSessionId) {
+                displayResult('askResult', { error: 'No session ID available. Create a session first.' }, true);
+                return;
+            }
+            
+            log(`❓ Testing Ask with session: ${currentSessionId}`);
+            const result = await makeRequest(`${API_BASE}/api/ask`, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    question: 'سلام، چطوری؟',
+                    sessionId: currentSessionId
+                })
+            });
+            
+            displayResult('askResult', result, !result.success);
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').textContent = '';
+        }
+
+        // Auto-run tests on page load
+        window.onload = function() {
+            log('🚀 Page loaded, starting tests...');
+            setTimeout(() => testCORS(), 1000);
+            setTimeout(() => testHealth(), 2000);
+        };
+    </script>
+</body>
+</html> 

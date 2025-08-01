@@ -48,8 +48,33 @@ function initDatabase() {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
           )
         `, (err) => {
-          if (err) reject(err);
-          else resolve();
+          if (err) {
+            reject(err);
+            return;
+          }
+          
+          // ایجاد جدول consultations
+          db.run(`
+            CREATE TABLE IF NOT EXISTS consultations (
+              id TEXT PRIMARY KEY,
+              session_id TEXT,
+              salutationtype TEXT NOT NULL,
+              first_name TEXT NOT NULL,
+              last_name TEXT NOT NULL,
+              age INTEGER NOT NULL,
+              email TEXT NOT NULL,
+              mobile TEXT NOT NULL,
+              city TEXT NOT NULL,
+              acquainted TEXT NOT NULL,
+              position TEXT NOT NULL,
+              message TEXT,
+              source TEXT DEFAULT 'chatbot',
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          `, (err) => {
+            if (err) reject(err);
+            else resolve();
+          });
         });
       });
     });
@@ -207,6 +232,77 @@ function deleteFile(fileName) {
   });
 }
 
+// اضافه کردن مشاوره جدید
+function addConsultation(formData) {
+  return new Promise((resolve, reject) => {
+    const { ulid } = require('ulid');
+    const consultationId = ulid();
+    const position = Array.isArray(formData.position) ? formData.position.join(', ') : formData.position;
+    
+    db.run(`
+      INSERT INTO consultations (
+        id, session_id, salutationtype, first_name, last_name, age, 
+        email, mobile, city, acquainted, position, message, source
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      consultationId,
+      formData.sessionId || null,
+      formData.salutationtype,
+      formData.first_name,
+      formData.last_name,
+      parseInt(formData.age),
+      formData.email,
+      formData.mobile,
+      formData.city,
+      formData.acquainted,
+      position,
+      formData.message || '',
+      formData.source || 'chatbot'
+    ], function(err) {
+      if (err) {
+        console.error('❌ Error adding consultation:', err);
+        reject(err);
+      } else {
+        console.log('✅ Consultation added successfully:', consultationId);
+        resolve({ id: consultationId });
+      }
+    });
+  });
+}
+
+// دریافت همه مشاوره‌ها
+function getAllConsultations() {
+  return new Promise((resolve, reject) => {
+    db.all(`
+      SELECT * FROM consultations 
+      ORDER BY created_at DESC
+    `, (err, rows) => {
+      if (err) {
+        console.error('❌ Error getting consultations:', err);
+        reject(err);
+      } else {
+        const consultations = rows.map(row => ({
+          id: row.id,
+          sessionId: row.session_id,
+          salutationtype: row.salutationtype,
+          first_name: row.first_name,
+          last_name: row.last_name,
+          age: row.age,
+          email: row.email,
+          mobile: row.mobile,
+          city: row.city,
+          acquainted: row.acquainted,
+          position: row.position,
+          message: row.message,
+          source: row.source,
+          created_at: row.created_at
+        }));
+        resolve(consultations);
+      }
+    });
+  });
+}
+
 module.exports = { 
   initDatabase, 
   getAllDocuments, 
@@ -217,5 +313,8 @@ module.exports = {
   getAllChunksWithEmbeddings,
   searchChunks,
   getFilesList,
-  deleteFile
+  deleteFile,
+  // Consultation functions
+  addConsultation,
+  getAllConsultations
 }; 

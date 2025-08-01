@@ -1,5 +1,13 @@
-const { isValidFileType, saveUploadedFile, processWordFile, ragQuery, getFilesList, deleteFile } = require('../services/rag');
 const { askGemini } = require('../services/ai');
+const { ragQuery, saveFile, getFilesList, deleteFile } = require('../services/rag');
+const { saveFileToVector } = require('../services/upstash-vector');
+const { 
+  createSession, 
+  getSession, 
+  addMessageToSession, 
+  getConversationHistory, 
+  buildContextFromHistory 
+} = require('../services/session');
 
 // انتخاب نوع دیتابیس بر اساس متغیر محیطی (فقط در production)
 let saveFileAndChunks = null;
@@ -96,7 +104,7 @@ reader.readAsDataURL(file);`,
       const fileHash = crypto.createHash('md5').update(content).digest('hex');
 
       // ایجاد embeddings و ذخیره
-      const { createEmbeddings } = require('../services/ai');
+      const { createEmbeddings } = require('../services/upstash-vector');
       const chunksWithEmbeddings = await createEmbeddings(chunks);
       
       await saveFileAndChunks(fileName, fileHash, chunksWithEmbeddings);
@@ -285,10 +293,10 @@ reader.readAsDataURL(file);`,
   });
   */
 
-  // پرسش از همه فایل‌های ذخیره شده
+  // پرسش از همه فایل‌های ذخیره شده + Session Management
   app.post('/api/rag/ask', async (c) => {
     try {
-      const { question } = await c.req.json();
+      const { question, sessionId } = await c.req.json();
       
       if (!question) {
         return c.json({ 
@@ -296,18 +304,59 @@ reader.readAsDataURL(file);`,
         }, 400);
       }
 
+      // اگر sessionId داده نشده، یکی جدید بساز
+      let currentSession;
+      if (sessionId) {
+        currentSession = getSession(sessionId);
+        if (!currentSession) {
+          return c.json({ 
+            error: 'Session یافت نشد' 
+          }, 404);
+        }
+      } else {
+        currentSession = createSession();
+      }
+
+      console.log(`🗃️ RAG Ask with Session: "${question}" (Session: ${currentSession.id})`);
+
       // RAG Query از دیتابیس
       const ragResult = await ragQuery(question);
       
-      // ارسال به Gemini
-      const answer = await askGemini(question, ragResult.context);
+      // ساخت context از تاریخچه مکالمه
+      const conversationContext = buildContextFromHistory(currentSession.id, false);
+
+      // ترکیب RAG context و تاریخچه مکالمه
+      const fullContext = [
+        ...ragResult.context,
+        conversationContext
+      ].filter(ctx => ctx.trim().length > 0);
+
+      // ذخیره سوال کاربر در session
+      addMessageToSession(currentSession.id, 'user', question.trim());
+      
+      const aiResult = await askGemini(question, fullContext);
+      
+      // Check if AI response contains copilot actions
+      const answer = typeof aiResult === 'string' ? aiResult : aiResult.text;
+      const copilotActions = typeof aiResult === 'object' ? aiResult.copilotActions || [] : [];
+
+      addMessageToSession(currentSession.id, 'assistant', answer, {
+        model: 'gemini',
+        searchMethod: 'rag-database',
+        chunksUsed: ragResult.context.length,
+        conversationLength: conversationContext.length,
+        copilotActions: copilotActions
+      });
 
       return c.json({
         success: true,
+        sessionId: currentSession.id,
         question: question,
         answer: answer,
+        copilotActions: copilotActions, // Frontend میتونه این actions رو پردازش کنه
         context: ragResult.context,
-        chunksUsed: ragResult.context.length
+        chunksUsed: ragResult.context.length,
+        conversationHistory: getConversationHistory(currentSession.id, 5)
       });
 
     } catch (error) {

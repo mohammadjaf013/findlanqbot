@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست Session ساده - فقط Query String</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .log {
+            background: #e9ecef;
+            border-color: #dee2e6;
+            color: #495057;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .url-info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 تست Session ساده - فقط Query String</h1>
+    
+    <div class="container">
+        <h2>📱 وضعیت URL فعلی</h2>
+        <div id="urlInfo" class="url-info"></div>
+        <button onclick="updateUrlInfo()">به‌روزرسانی URL</button>
+    </div>
+    
+    <div class="container">
+        <h2>1. تست ایجاد Session</h2>
+        <button onclick="createSession()">ایجاد Session جدید</button>
+        <div id="createResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>2. تست Ask با Session</h2>
+        <button onclick="testAsk()">تست Ask</button>
+        <div id="askResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>3. Logs</h2>
+        <button onclick="clearLogs()">پاک کردن Logs</button>
+        <div id="logs" class="result log"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://bot-api.finlandq.com';
+        let currentSessionId = null;
+
+        function updateUrlInfo() {
+            const urlInfo = document.getElementById('urlInfo');
+            const currentUrl = window.location.href;
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('session');
+            
+            urlInfo.innerHTML = `
+                <strong>URL فعلی:</strong> ${currentUrl}<br>
+                <strong>Session ID در URL:</strong> ${sessionId || 'هیچ‌کدام'}<br>
+                <strong>Session ID فعلی:</strong> ${currentSessionId || 'هیچ‌کدام'}
+            `;
+        }
+
+        function log(message) {
+            const logsDiv = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            logsDiv.textContent += logEntry;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function displayResult(elementId, result, isError = false) {
+            const element = document.getElementById(elementId);
+            element.className = `result ${isError ? 'error' : 'success'}`;
+            element.textContent = JSON.stringify(result, null, 2);
+        }
+
+        async function createSession() {
+            log('🆔 Creating new session...');
+            try {
+                const response = await fetch(`${API_BASE}/api/session/new`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                log(`📥 Response status: ${response.status}`);
+                const data = await response.json();
+                log(`📥 Response data: ${JSON.stringify(data)}`);
+                
+                if (data.success) {
+                    currentSessionId = data.session.id;
+                    log(`✅ Session created: ${currentSessionId}`);
+                    
+                    // Update URL with session ID
+                    const newUrl = new URL(window.location.href);
+                    newUrl.searchParams.set('session', currentSessionId);
+                    window.history.replaceState({}, '', newUrl.toString());
+                    log(`🔗 URL updated with session ID: ${newUrl.toString()}`);
+                    
+                    updateUrlInfo();
+                    displayResult('createResult', data);
+                } else {
+                    log(`❌ Error: ${data.error}`);
+                    displayResult('createResult', data, true);
+                }
+            } catch (error) {
+                log(`❌ Network error: ${error.message}`);
+                displayResult('createResult', { error: error.message }, true);
+            }
+        }
+
+        async function testAsk() {
+            if (!currentSessionId) {
+                displayResult('askResult', { error: 'No session ID available. Create a session first.' }, true);
+                return;
+            }
+            
+            log(`❓ Testing Ask with session: ${currentSessionId}`);
+            try {
+                const response = await fetch(`${API_BASE}/api/ask`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question: 'سلام',
+                        sessionId: currentSessionId
+                    })
+                });
+                
+                log(`📥 Response status: ${response.status}`);
+                const data = await response.json();
+                log(`📥 Response data: ${JSON.stringify(data)}`);
+                
+                displayResult('askResult', data, !data.success);
+            } catch (error) {
+                log(`❌ Network error: ${error.message}`);
+                displayResult('askResult', { error: error.message }, true);
+            }
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').textContent = '';
+        }
+
+        // Auto-run on page load
+        window.onload = function() {
+            log('🚀 Page loaded');
+            
+            // Check if session ID exists in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlSessionId = urlParams.get('session');
+            
+            if (urlSessionId) {
+                currentSessionId = urlSessionId;
+                log(`📱 Session ID found in URL: ${urlSessionId}`);
+            } else {
+                log('📱 No session ID in URL');
+            }
+            
+            updateUrlInfo();
+        };
+    </script>
+</body>
+</html> 
