@@ -22,7 +22,7 @@ const { HumanMessage, SystemMessage, AIMessage } = require('@langchain/core/mess
 const { ConversationChain, LLMChain } = require('langchain/chains');
 const { BufferMemory } = require('langchain/memory');
 const { PromptTemplate, ChatPromptTemplate } = require('@langchain/core/prompts');
-const { RunnableSequence } = require('@langchain/core/runnables');
+const { RunnableSequence, RunnableWithMemory } = require('@langchain/core/runnables');
 const { StringOutputParser } = require('@langchain/core/output_parsers');
 const path = require('path');
 const fs = require('fs');
@@ -128,7 +128,7 @@ module.exports = (app) => {
     }
   });
 
-  // تابع پیشرفته با استفاده از LangChain کامل
+  // تابع پیشرفته با استفاده از LangChain کامل و BufferMemory
   async function askWithLangChain(question, context, sessionId) {
     try {
       console.log(`🤖 Starting advanced LangChain processing for session: ${sessionId}`);
@@ -136,76 +136,150 @@ module.exports = (app) => {
       // 1. تنظیم مدل
       const model = new ChatGoogleGenerativeAI({
         model: "gemini-2.5-flash",
-        maxOutputTokens: 1500,
+        maxOutputTokens: 2024,
         temperature: 0.7,
         apiKey: process.env.GEMINI_API_KEY,
       });
 
-      // 2. ایجاد تمپلیت پیشرفته
+      // 2. ایجاد تمپلیت پیشرفته با memory key
       const promptTemplate = ChatPromptTemplate.fromMessages([
-        ["system", `شما دستیار هوشمند فنلاند کیو هستید که در زمینه مهاجرت، تحصیل، کار و زندگی در فنلاند تخصص دارید.
+        ["system", `
+شما دستیار هوشمند برند فنلاند کیو هستید، متخصص در مهاجرت، تحصیل، کار و زندگی در فنلاند.
 
 قوانین مهم:
 
-تو یک دستیار هوشمند هستی با نام «کیو»، نماینده رسمی برند فنلاند کیو.
-نقش تو مشاور حرفه‌ای و فروشنده متخصص محصولات این برند هست.
+- فقط درباره محصولات فنلاند کیو و کاروانونچر صحبت کن.
+- نقش شما مشاور دلسوز، حرفه‌ای و آشنا به تمام محصولات این برند است.
+- لحن شما همیشه صمیمی، ساده و دوستانه‌ست 😄 از ایموجی استفاده کن ✨
+- فقط یک‌بار معرفی لازم است، بعد از آن فقط پاسخ بده.
+- هدف تو کمک به انتخاب آگاهانه و مناسب است، نه فقط فروش.
+- اگر اطلاعات کم بود، بگو: «برای اطلاعات بیشتر فرم مشاوره رو پر کن 💬»
+- هر سوالی رو دقیق بخون، نیاز کاربر رو بفهم، بعد پاسخ بده.
+- اگر لازمه، با چند سوال اول نیازش رو پیدا کن بعد محصول معرفی کن ✅
+- اطلاعات مرجع بصورت markdown هست و هر بخش با # یا H1 جدا شده اول درک کن سوال برای کدام قسمت هست و از ان قسمت جواب بده زیاد بلند هم جواب نده 
 
-قوانین اصلی:
-- همیشه با لحن صمیمی، ساده و قابل فهم صحبت کن 😄
-- از ایموجی‌ها استفاده کن تا حس راحتی و دوستی منتقل شه ✨
-- مثل یه مشاور دلسوز و کاربلد جواب بده؛ کسی که کاملاً محصولات رو می‌شناسه
-- هدف تو کمک به کاربر برای انتخاب محصول مناسبشه، نه صرفاً فروش
-- از اطلاعات کامل استفاده کن تا همه‌چیز رو دقیق و واضح توضیح بدی
-- هیچ‌وقت نگویید "بر اساس اطلاعات داده‌شده" یا "طبق متن بالا" ❌
-- اگر اطلاعات کافی نداری، بگو: «برای اطلاعات بیشتر، لطفاً فرم درخواست مشاوره رو پر کن 💬»
-- فقط درباره محصولات برند فنلاند کیو و کاروانونچر صحبت کن، نه برندهای دیگه
-- هر سوالی رو با دقت بخون، نیاز کاربر رو بفهم، بعد پاسخ بده اگر نیاز شد چند سوال بپرس که متوجه بشی نیاز کاربر کدام محصول هست بعد تعریف کن براش محصول رو✅
-- یادت نره: تو کیو هستی، و همه چیز درباره فنلاند کیو رو بلدی 💙
-- توی هر پیام هم لازم نیست خودت رو معرفی کنی  
+
 
 قوانین کنترل Copilot:
 - اگر کاربر درخواست مشاوره کرد (مثل "مشاوره می‌خوام"، "نیاز به راهنمایی دارم"، "کمک می‌خوام"), در پایان پاسخ [COPILOT_ACTION:CONSULTATION_REQUEST] اضافه کن
 - اگر کاربر سوال پیچیده‌ای پرسید که نیاز به مشاوره شخصی دارد، [COPILOT_ACTION:CONSULTATION_REQUEST] اضافه کن
 - اگر کاربر مشخصات شخصی (سن، تحصیلات، وضعیت) گفت، [COPILOT_ACTION:CONSULTATION_REQUEST] اضافه کن
 
-اطلاعات مرجع: {context}
+اطلاعات مرجع: - از {context} برای پاسخ دقیق و کاربردی استفاده کن، نه تکراری یا عمومی.
 تاریخچه مکالمه: {chat_history}
-سوال فعلی: {question}`],
-        ["human", "{question}"]
+سوال فعلی: {input}`],
+        ["human", "{input}"]
       ]);
 
-      // 3. ایجاد زنجیره قابل اجرا
-      const chain = RunnableSequence.from([
+      // 3. ایجاد BufferMemory با تنظیمات بهینه
+      const memory = new BufferMemory({
+        returnMessages: true,
+        memoryKey: "chat_history",
+        inputKey: "input",
+        outputKey: "output",
+        maxTokenLimit: 2000, // محدودیت توکن برای کنترل حافظه
+        sessionId: sessionId
+      });
+
+      // 4. بارگذاری تاریخچه مکالمه به حافظه
+      if (sessionId) {
+        try {
+          const history = await getConversationHistory(sessionId, 10);
+          console.log(`📚 Loading ${history.length} messages into memory for session: ${sessionId}`);
+          
+          // استفاده از Map برای جفت‌سازی سریع‌تر
+          const userMessages = new Map();
+          const conversations = [];
+          
+          // اول تمام پیام‌های user را در Map ذخیره کن
+          history.forEach(msg => {
+            if (msg.role === 'user') {
+              userMessages.set(msg.timestamp, msg.content);
+            }
+          });
+          
+          // سپس برای هر پیام assistant، user مربوطه را پیدا کن
+          history.forEach(msg => {
+            if (msg.role === 'assistant') {
+              // پیدا کردن آخرین پیام user قبل از این assistant message
+              let latestUserTime = 0;
+              let latestUserContent = '';
+              
+              for (const [timestamp, content] of userMessages.entries()) {
+                if (timestamp < msg.timestamp && timestamp > latestUserTime) {
+                  latestUserTime = timestamp;
+                  latestUserContent = content;
+                }
+              }
+              
+              if (latestUserContent) {
+                conversations.push({
+                  input: latestUserContent,
+                  output: msg.content
+                });
+                // حذف پیام user استفاده شده تا duplicate نشود
+                userMessages.delete(latestUserTime);
+              }
+            }
+          });
+          
+          // اضافه کردن به حافظه
+          for (const conv of conversations) {
+            await memory.saveContext(
+              { input: conv.input },
+              { output: conv.output }
+            );
+          }
+          
+          console.log(`✅ Loaded ${conversations.length} conversation pairs into memory`);
+          
+        } catch (memoryError) {
+          console.error('خطا در بارگذاری تاریخچه به حافظه:', memoryError);
+          console.log('🔄 Continuing with empty memory...');
+        }
+      }
+
+      // 5. ایجاد زنجیره با حافظه و RunnableWithMemory
+      const chainWithMemory = RunnableSequence.from([
         {
           context: () => context.join('\n\n'),
+          input: () => question,
           chat_history: async () => {
-            if (sessionId) {
-              const history = await getConversationHistory(sessionId, 5);
-              return history.map(msg => `${msg.role}: ${msg.content}`).join('\n');
+            try {
+              const memoryVariables = await memory.loadMemoryVariables({});
+              return memoryVariables.chat_history || '';
+            } catch (error) {
+              console.error('خطا در بارگذاری متغیرهای حافظه:', error);
+              return '';
             }
-            return '';
-          },
-          question: () => question
+          }
         },
         promptTemplate,
         model,
         new StringOutputParser()
       ]);
 
-      // 4. اجرای زنجیره
-      console.log(`🔄 Executing LangChain sequence...`);
-      const aiResponse = await chain.invoke({});
+      // 6. اجرای زنجیره با حافظه
+      console.log(`🔄 Executing LangChain sequence with memory...`);
+      const aiResponse = await chainWithMemory.invoke({});
 
-      // 5. استخراج copilot actions
+      // 7. ذخیره مکالمه در حافظه
+      try {
+        await memory.saveContext(
+          { input: question },
+          { output: aiResponse }
+        );
+        console.log(`💾 Memory updated for session: ${sessionId}`);
+      } catch (memorySaveError) {
+        console.error('خطا در ذخیره حافظه:', memorySaveError);
+        // ادامه اجرا حتی در صورت خطا در ذخیره حافظه
+      }
+
+      // 8. استخراج copilot actions
       const { response: cleanResponse, actions } = extractCopilotActions(aiResponse);
       
       if (actions.length > 0) {
         console.log(`🎯 Copilot Actions detected:`, actions);
-      }
-
-      // 6. ذخیره در کش (اختیاری)
-      if (sessionId) {
-        console.log(`💾 Caching response for session: ${sessionId}`);
       }
       
       return { text: cleanResponse, copilotActions: actions };
@@ -215,13 +289,14 @@ module.exports = (app) => {
     }
   }
 
-  // تابع مدیریت کش و حافظه
+  // تابع مدیریت حافظه پیشرفته با تنظیمات بهینه
   function createMemoryManager(sessionId) {
     return new BufferMemory({
       returnMessages: true,
       memoryKey: "chat_history",
       inputKey: "input",
       outputKey: "output",
+      maxTokenLimit: 2000, // محدودیت توکن برای کنترل حافظه
       sessionId: sessionId
     });
   }
@@ -306,7 +381,7 @@ module.exports = (app) => {
       // خواندن فایل finlandq.txt
       let contextFromFile = '';
       try {
-        const filePath = path.join(__dirname, '../../finlandq.txt');
+        const filePath = path.join(__dirname, '../../finlandq.md');
         contextFromFile = fs.readFileSync(filePath, 'utf8');
         console.log(`📖 File loaded: ${contextFromFile.length} characters`);
       } catch (fileError) {

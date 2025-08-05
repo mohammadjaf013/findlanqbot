@@ -449,10 +449,7 @@ export default function FinlandQ4Page() {
     const consultationKeywords = [
       '[COPILOT_ACTION:CONSULTATION_REQUEST]',
       'مشاوره می‌خوام',
-      'نیاز به راهنمایی دارم',
-      'کمک می‌خوام',
-      'مشاوره',
-      'راهنمایی'
+
     ];
     
     return consultationKeywords.some(keyword => 
@@ -994,7 +991,13 @@ export default function FinlandQ4Page() {
   };
 
   const showHelp = () => {
-    sendMessage("لطفاً راهنمایی کنید که چطور می‌تونم از شما استفاده کنم؟");
+    const helpMessage: Message = {
+      id: `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: 'assistant',
+      content: `🎯 **راهنمای استفاده از فنلاند کیو:**\n\n💬 **چت عادی:**\n• هر سوالی در مورد مهاجرت، تحصیل یا کار در فنلاند دارید بپرسید\n• من با اطلاعات به‌روز و دقیق کمکتون می‌کنم\n\n📋 **درخواست مشاوره:**\n• فقط بنویسید "مشاوره می‌خوام"\n• فرم کامل مشاوره برایتان باز می‌شود\n• کارشناسان ما تا 24 ساعت با شما تماس می‌گیرند\n\n🔍 **موضوعات پوشش داده شده:**\n• مهاجرت به فنلاند\n• تحصیل در دانشگاه‌های فنلاند\n• کار و اشتغال\n• ویزا و اقامت\n• زندگی در فنلاند\n• سرمایه‌گذاری و استارتاپ\n\n📞 **تماس مستقیم:** 91691021\n\nآماده‌ام کمکتون کنم! 😊`,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, helpMessage]);
   };
 
   const requestConsultation = () => {
@@ -1003,8 +1006,8 @@ export default function FinlandQ4Page() {
 
   return (
     <div className="h-screen flex overflow-hidden bg-gray-50" dir="rtl">
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 right-0 z-50 w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'} md:relative md:translate-x-0 flex-shrink-0`}>
+            {/* Mobile Sidebar */}
+      <div className={`fixed inset-y-0 right-0 z-50 w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'} md:hidden`}>
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
@@ -1014,9 +1017,9 @@ export default function FinlandQ4Page() {
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="md:hidden p-2 hover:bg-gray-100 rounded-lg"
+              className="p-2 hover:bg-gray-100 rounded-lg"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" color='black' />
             </button>
           </div>
 
@@ -1049,14 +1052,6 @@ export default function FinlandQ4Page() {
                 <span>درخواست مشاوره</span>
               </button>
             </div>
-
-            {/* Session Info */}
-            {sessionId && (
-              <div className="p-3 bg-gray-50 rounded-lg mb-4">
-                <p className="text-sm text-gray-600">شناسه جلسه:</p>
-                <p className="text-xs font-mono text-gray-500">{sessionId.slice(-8)}</p>
-              </div>
-            )}
           </div>
 
           {/* Sidebar Footer */}
@@ -1078,7 +1073,7 @@ export default function FinlandQ4Page() {
               onClick={() => setSidebarOpen(true)}
               className="md:hidden p-2 hover:bg-gray-100 rounded-lg"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-5 h-5" color='black' />
             </button>
             
             <div className="flex items-center gap-3">
@@ -1086,7 +1081,40 @@ export default function FinlandQ4Page() {
               <h1 className="text-lg font-semibold text-gray-900">فنلاند کیو</h1>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Desktop Navigation Buttons */}
+            <div className="hidden md:flex items-center gap-2">
+              <button
+                onClick={startNewChat}
+                className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                <span>چت جدید</span>
+              </button>
+              
+              <button
+                onClick={showHelp}
+                className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
+              >
+                <HelpCircle className="w-4 h-4" />
+                <span>راهنما</span>
+              </button>
+              
+              <button
+                onClick={requestConsultation}
+                className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
+              >
+                <Users className="w-4 h-4" />
+                <span>درخواست مشاوره</span>
+              </button>
+              
+              <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                آنلاین
+              </div>
+            </div>
+
+            {/* Mobile Status */}
+            <div className="md:hidden flex items-center gap-2">
               <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 آنلاین
@@ -1242,7 +1270,7 @@ export default function FinlandQ4Page() {
                     }}
                     disabled={isLoading}
                   />
-                  <div className="absolute left-3 top-3">
+                  <div className="absolute right-3 top-3">
                     <Sparkles className="w-5 h-5 text-blue-500" />
                   </div>
                 </div>
