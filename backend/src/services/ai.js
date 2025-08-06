@@ -103,7 +103,7 @@ ${context}
   } catch (error) {
     console.error('خطا در Google AI:', error);
     return { 
-      text: 'متأسفم، خطایی رخ داده است. برای اطلاعات تکمیلی با پشتیبانی شماره 91691021 تماس بگیرید.',
+      text: 'متأسفم، خطایی رخ داده است. .',
       copilotActions: []
     };
   }

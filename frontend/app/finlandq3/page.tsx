@@ -416,7 +416,7 @@ export default function FinlandQPage() {
       const errorMessage: Message = {
         id: `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type: 'assistant',
-        content: 'متأسفم، خطایی رخ داده است. برای اطلاعات تکمیلی با پشتیبانی شماره 91691021 تماس بگیرید.',
+        content: 'متأسفم، خطایی رخ داده است.',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -569,7 +569,7 @@ export default function FinlandQPage() {
         const completionMessage: Message = {
           id: Date.now().toString(),
           type: 'assistant',
-          content: '✅ اطلاعات شما با موفقیت ثبت شد!\n\nکارشناسان ما در اسرع وقت با شما تماس خواهند گرفت.\n\n📞 برای تماس مستقیم: 91691021\n\nممنون از اعتماد شما! 🙏',
+          content: '✅ اطلاعات شما با موفقیت ثبت شد!\n\nکارشناسان ما در اسرع وقت با شما تماس خواهند گرفت.\n\nممنون از اعتماد شما! 🙏',
           timestamp: new Date()
         };
         setMessages(prev => [...prev, completionMessage]);
@@ -717,7 +717,7 @@ export default function FinlandQPage() {
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30"
               >
-                <img src="/q.png" className='w-full h-full object-contain p-2' alt="FinlandQ" />
+                <img src="/qchat.png" className='w-full h-full object-contain p-2' alt="FinlandQ" />
               </motion.div>
               <div>
                 <h2 className="font-bold text-sm md:text-xl flex items-center gap-2">

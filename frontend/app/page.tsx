@@ -37,7 +37,7 @@ export default function Home() {
         <header className="bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm border-b border-gray-200">
           <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <img src="q.png" alt="لوگو فنلاند کیو" className="h-9 w-9" />
+              <img src="qchat.png" alt="لوگو فنلاند کیو" className="h-9 w-9" />
               <Link href="/" className="text-xl font-bold text-gray-900">فنلاند کیو</Link>
         </div>
         
@@ -85,22 +85,24 @@ export default function Home() {
           {/* Hero Section */}
           <section className="bg-hero-gradient pt-20 pb-24 text-center">
             <div className="container mx-auto px-6">
+         
+         <div className='flex justify-center items-center'>
+          <img src="qchat.png" alt="لوگو فنلاند کیو" className="h-24 w-24" />
+         </div>
               <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
-                مهاجرت به فنلاند،<br />
+                <div className='mb-3'>مهاجرت به فنلاند،</div>
+                
                 <span className="bg-gradient-to-r from-blue-600 to-sky-400 bg-clip-text text-transparent">هوشمند و آسان</span>
               </h1>
               <p className="mt-6 max-w-2xl mx-auto text-lg text-gray-600">
-                فنلاند کیو، دستیار هوشمند شما برای پاسخ به تمام سوالات مربوط به مهاجرت تحصیلی، کاری و استارتاپی به فنلاند است. مسیر خود را با اطلاعات دقیق و به‌روز شروع کنید.
+              کیو، دستیار هوشمند فنلاندکیو برای پاسخ به تمام سوالات مربوط به مهاجرت تحصیلی، کاری و استارتاپی به فنلاند است. مسیر خود را با اطلاعات دقیق و به‌روز شروع کنید.
               </p>
               <div className="mt-10 flex flex-col sm:flex-row justify-center items-center gap-4">
                 <Link href="/finlandq4" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"></path></svg>
                   شروع گفتگو
                 </Link>
-                <a href="#" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-gray-700 px-8 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-colors duration-300 border border-gray-300">
-                  ثبت درخواست مشاوره
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-                </a>
+              
           </div>
         </div>
           </section>
@@ -129,7 +131,7 @@ export default function Home() {
                   </div>
                   <h3 className="text-xl font-bold mb-3">مشاوره تخصصی</h3>
                   <p className="text-gray-600 mb-5">برای بررسی شرایط اختصاصی شما و دریافت راهنمایی قدم‌به‌قدم، یک جلسه مشاوره با کارشناسان ما رزرو کنید.</p>
-                  <a href="#" className="font-semibold text-blue-600 hover:text-blue-800 transition-colors">رزرو وقت مشاوره ←</a>
+                  <a href="https://request.finlandq.com/" target='_blank' className="font-semibold text-blue-600 hover:text-blue-800 transition-colors">رزرو وقت مشاوره ←</a>
                 </div>
                 {/* Service Card 3 */}
                 <div className="bg-gray-50 border border-gray-200 p-8 rounded-2xl hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
@@ -138,14 +140,14 @@ export default function Home() {
                   </div>
                   <h3 className="text-xl font-bold mb-3">راهنمای جامع</h3>
                   <p className="text-gray-600 mb-5">دسترسی به مقالات و راهنماهای کامل در مورد کاریابی، اجاره خانه، سیستم آموزشی و فرهنگ فنلاند.</p>
-                  <a href="#" className="font-semibold text-blue-600 hover:text-blue-800 transition-colors">ورود به بخش مقالات ←</a>
+                  <a href="https://finlandq.com/study/blog/" target='_blank' className="font-semibold text-blue-600 hover:text-blue-800 transition-colors">ورود به بخش مقالات ←</a>
                 </div>
               </div>
             </div>
           </section>
           
           {/* FAQ Section */}
-          <section id="faq" className="py-20 bg-hero-gradient">
+          {/* <section id="faq" className="py-20 bg-hero-gradient">
             <div className="container mx-auto px-6">
               <div className="text-center mb-12">
                 <h2 className="text-3xl font-bold text-gray-900">سوالات متداول</h2>
@@ -175,7 +177,7 @@ export default function Home() {
                 </details>
               </div>
             </div>
-          </section>
+          </section> */}
         </main>
         
         {/* Footer */}
@@ -191,18 +193,22 @@ export default function Home() {
               <div>
                 <h5 className="font-semibold mb-4 text-gray-200">لینک‌های سریع</h5>
                 <ul className="space-y-3">
-                  <li><a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">درباره ما</a></li>
-                  <li><a href="#services" className="text-gray-400 hover:text-white transition-colors text-sm">خدمات</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">وبلاگ</a></li>
-                  <li><a href="#faq" className="text-gray-400 hover:text-white transition-colors text-sm">سوالات متداول</a></li>
+                  <li><a href="https://finlandq.com/study/about-us/" target='_blank' className="text-gray-400 hover:text-white transition-colors text-sm">درباره ما</a></li>
+                  <li><a href="https://finlandq.com/study/services/"  target='_blank'  className="text-gray-400 hover:text-white transition-colors text-sm">خدمات</a></li>
+                  <li><a href="https://finlandq.com/study/blog/" target='_blank'  className="text-gray-400 hover:text-white transition-colors text-sm">وبلاگ</a></li>
+                  <li><a href="https://finlandq.com/study/faq/" target='_blank'  className="text-gray-400 hover:text-white transition-colors text-sm">سوالات متداول</a></li>
                 </ul>
               </div>
               {/* Legal */}
               <div>
                 <h5 className="font-semibold mb-4 text-gray-200">اطلاعات حقوقی</h5>
                 <ul className="space-y-3">
-                  <li><a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">شرایط استفاده</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">حریم خصوصی</a></li>
+                  <li><a href="https://finlandq.com/study/terms/" target='_blank'  className="text-gray-400 hover:text-white transition-colors text-sm">
+قوانین و مقررات
+</a></li>
+                  <li><a href="https://finlandq.com/study/contact-us/" target='_blank'  className="text-gray-400 hover:text-white transition-colors text-sm">
+تماس با ما
+</a></li>
                 </ul>
               </div>
               {/* Contact */}
@@ -211,11 +217,11 @@ export default function Home() {
                 <ul className="space-y-3 text-gray-400 text-sm">
                   <li className="flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    <span>۰۲۱-۱۲۳۴۵۶۷۸</span>
+                    <span>021-91691021</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                    <span>support@finlandq.com</span>
+                    <span>info@finlandq.com</span>
                   </li>
                 </ul>
               </div>

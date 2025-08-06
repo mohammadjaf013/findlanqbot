@@ -186,7 +186,7 @@ module.exports = (app) => {
         try {
           const history = await getConversationHistory(sessionId, 10);
           console.log(`📚 Loading ${history.length} messages into memory for session: ${sessionId}`);
-          
+          console.log("history",history)
           // استفاده از Map برای جفت‌سازی سریع‌تر
           const userMessages = new Map();
           const conversations = [];
@@ -531,6 +531,390 @@ module.exports = (app) => {
       console.error('Error getting session stats:', error);
       return c.json({ 
         error: 'خطا در دریافت آمار sessions' 
+      }, 500);
+    }
+  });
+
+  // روت جدید برای آمار جامع sessions
+  app.get('/api/session/analytics', async (c) => {
+    try {
+      const isProduction = process.env.NODE_ENV === 'production';
+      const isVercel = process.env.VERCEL === '1';
+      
+      let analytics = {
+        totalSessions: 0,
+        activeSessions: 0,
+        totalQuestions: 0,
+        totalActiveTime: 0,
+        averageQuestionsPerSession: 0,
+        averageSessionDuration: 0,
+        sessionsByDate: {},
+        questionsByDate: {},
+        oldestSession: null,
+        newestSession: null
+      };
+
+      if (isProduction || isVercel) {
+        // استفاده از Turso
+        const tursoDb = require('../services/turso-db');
+        
+        try {
+          // استفاده از تابع getSessionStats موجود
+          const basicStats = await tursoDb.getSessionStats();
+          analytics.totalSessions = basicStats.totalSessions;
+          analytics.activeSessions = basicStats.activeSessions;
+          analytics.oldestSession = basicStats.oldestSession;
+          
+          // برای محاسبه آمار دقیق‌تر، نیاز به query های مستقیم داریم
+          const { createClient } = require('@libsql/client');
+          const client = createClient({
+            url: process.env.TURSO_DATABASE_URL,
+            authToken: process.env.TURSO_AUTH_TOKEN,
+          });
+          
+          // تعداد کل سوالات
+          const questionsResult = await client.execute('SELECT COUNT(*) as total FROM conversations WHERE role = ?', ['user']);
+          analytics.totalQuestions = questionsResult.rows[0].total;
+          
+          // محاسبه زمان فعال
+          const sessionsResult = await client.execute('SELECT created_at, last_activity FROM sessions');
+          let totalActiveTime = 0;
+          
+          sessionsResult.rows.forEach(session => {
+            const sessionStart = new Date(session.created_at);
+            const sessionEnd = new Date(session.last_activity);
+            const duration = (sessionEnd - sessionStart) / (1000 * 60 * 60); // ساعت
+            totalActiveTime += duration;
+          });
+          
+          analytics.totalActiveTime = Math.round(totalActiveTime * 100) / 100;
+          
+          // محاسبه میانگین‌ها
+          if (analytics.totalSessions > 0) {
+            analytics.averageQuestionsPerSession = Math.round((analytics.totalQuestions / analytics.totalSessions) * 100) / 100;
+            analytics.averageSessionDuration = Math.round((analytics.totalActiveTime / analytics.totalSessions) * 100) / 100;
+          }
+          
+          // آمار بر اساس تاریخ
+          const sessionsByDateResult = await client.execute('SELECT DATE(created_at) as date FROM sessions');
+          sessionsByDateResult.rows.forEach(row => {
+            analytics.sessionsByDate[row.date] = (analytics.sessionsByDate[row.date] || 0) + 1;
+          });
+          
+          // سوالات بر اساس تاریخ
+          const questionsByDateResult = await client.execute('SELECT DATE(timestamp) as date FROM conversations WHERE role = ?', ['user']);
+          questionsByDateResult.rows.forEach(row => {
+            analytics.questionsByDate[row.date] = (analytics.questionsByDate[row.date] || 0) + 1;
+          });
+          
+          // جدیدترین session
+          const newestResult = await client.execute('SELECT MAX(created_at) as newest FROM sessions');
+          if (newestResult.rows[0].newest) {
+            analytics.newestSession = newestResult.rows[0].newest;
+          }
+          
+        } catch (error) {
+          console.error('Error getting analytics from Turso:', error);
+          // Fallback to basic stats
+          analytics = {
+            totalSessions: 0,
+            activeSessions: 0,
+            totalQuestions: 0,
+            totalActiveTime: 0,
+            averageQuestionsPerSession: 0,
+            averageSessionDuration: 0,
+            sessionsByDate: {},
+            questionsByDate: {},
+            oldestSession: null,
+            newestSession: null
+          };
+        }
+      } else {
+        // استفاده از SQLite در development
+        await initSessionDatabase();
+        
+        analytics = await new Promise((resolve, reject) => {
+          // تعداد کل sessions
+          db.get('SELECT COUNT(*) as total FROM sessions', (err, row) => {
+            if (err) {
+              reject(err);
+              return;
+            }
+            
+            analytics.totalSessions = row.total;
+            analytics.activeSessions = row.total;
+            
+            // تعداد کل سوالات
+            db.get('SELECT COUNT(*) as total FROM conversations WHERE role = ?', ['user'], (err, row) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+              
+              analytics.totalQuestions = row.total;
+              
+              // محاسبه زمان فعال
+              db.all('SELECT created_at, last_activity FROM sessions', (err, rows) => {
+                if (err) {
+                  reject(err);
+                  return;
+                }
+                
+                let totalActiveTime = 0;
+                rows.forEach(session => {
+                  const sessionStart = new Date(session.created_at);
+                  const sessionEnd = new Date(session.last_activity);
+                  const duration = (sessionEnd - sessionStart) / (1000 * 60 * 60); // ساعت
+                  totalActiveTime += duration;
+                });
+                
+                analytics.totalActiveTime = Math.round(totalActiveTime * 100) / 100;
+                
+                // محاسبه میانگین‌ها
+                if (analytics.totalSessions > 0) {
+                  analytics.averageQuestionsPerSession = Math.round((analytics.totalQuestions / analytics.totalSessions) * 100) / 100;
+                  analytics.averageSessionDuration = Math.round((analytics.totalActiveTime / analytics.totalSessions) * 100) / 100;
+                }
+                
+                // آمار بر اساس تاریخ
+                db.all('SELECT DATE(created_at) as date FROM sessions', (err, rows) => {
+                  if (err) {
+                    reject(err);
+                    return;
+                  }
+                  
+                  rows.forEach(row => {
+                    analytics.sessionsByDate[row.date] = (analytics.sessionsByDate[row.date] || 0) + 1;
+                  });
+                  
+                  // سوالات بر اساس تاریخ
+                  db.all('SELECT DATE(timestamp) as date FROM conversations WHERE role = ?', ['user'], (err, rows) => {
+                    if (err) {
+                      reject(err);
+                      return;
+                    }
+                    
+                    rows.forEach(row => {
+                      analytics.questionsByDate[row.date] = (analytics.questionsByDate[row.date] || 0) + 1;
+                    });
+                    
+                    // قدیمی‌ترین و جدیدترین session
+                    db.get('SELECT MIN(created_at) as oldest, MAX(created_at) as newest FROM sessions', (err, row) => {
+                      if (err) {
+                        reject(err);
+                        return;
+                      }
+                      
+                      analytics.oldestSession = row.oldest;
+                      analytics.newestSession = row.newest;
+                      
+                      resolve(analytics);
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      }
+      
+      return c.json({
+        success: true,
+        analytics,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('Error getting session analytics:', error);
+      return c.json({ 
+        error: 'خطا در دریافت آمار جامع sessions',
+        message: error.message
+      }, 500);
+    }
+  });
+
+  // روت ساده برای آمار پایه sessions
+  app.get('/api/session/basic-stats', async (c) => {
+    try {
+      const isProduction = process.env.NODE_ENV === 'production';
+      const isVercel = process.env.VERCEL === '1';
+      
+      let stats = {
+        chatSessions: 0,
+        questionsAsked: 0,
+        activeTimeHours: 0
+      };
+
+      if (isProduction || isVercel) {
+        // استفاده از Turso
+        const tursoDb = require('../services/turso-db');
+        
+        try {
+          // استفاده از تابع getSessionStats موجود
+          const basicStats = await tursoDb.getSessionStats();
+          stats.chatSessions = basicStats.totalSessions;
+          
+          // برای محاسبه آمار دقیق‌تر، نیاز به query های مستقیم داریم
+          const { createClient } = require('@libsql/client');
+          const client = createClient({
+            url: process.env.TURSO_DATABASE_URL,
+            authToken: process.env.TURSO_AUTH_TOKEN,
+          });
+          
+          // تعداد کل سوالات
+          const questionsResult = await client.execute('SELECT COUNT(*) as total FROM conversations WHERE role = ?', ['user']);
+          stats.questionsAsked = questionsResult.rows[0].total;
+          
+          // محاسبه زمان فعال
+          const sessionsResult = await client.execute('SELECT created_at, last_activity FROM sessions');
+          let totalActiveTime = 0;
+          
+          sessionsResult.rows.forEach(session => {
+            const sessionStart = new Date(session.created_at);
+            const sessionEnd = new Date(session.last_activity);
+            const duration = (sessionEnd - sessionStart) / (1000 * 60 * 60); // ساعت
+            totalActiveTime += duration;
+          });
+          
+          stats.activeTimeHours = Math.round(totalActiveTime * 100) / 100;
+          
+        } catch (error) {
+          console.error('Error getting basic stats from Turso:', error);
+          // Fallback to zero values
+          stats = {
+            chatSessions: 0,
+            questionsAsked: 0,
+            activeTimeHours: 0
+          };
+        }
+      } else {
+        // استفاده از SQLite در development
+        await initSessionDatabase();
+        
+        stats = await new Promise((resolve, reject) => {
+          // تعداد کل sessions
+          db.get('SELECT COUNT(*) as total FROM sessions', (err, row) => {
+            if (err) {
+              reject(err);
+              return;
+            }
+            
+            stats.chatSessions = row.total;
+            
+            // تعداد کل سوالات
+            db.get('SELECT COUNT(*) as total FROM conversations WHERE role = ?', ['user'], (err, row) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+              
+              stats.questionsAsked = row.total;
+              
+              // محاسبه زمان فعال
+              db.all('SELECT created_at, last_activity FROM sessions', (err, rows) => {
+                if (err) {
+                  reject(err);
+                  return;
+                }
+                
+                let totalActiveTime = 0;
+                rows.forEach(session => {
+                  const sessionStart = new Date(session.created_at);
+                  const sessionEnd = new Date(session.last_activity);
+                  const duration = (sessionEnd - sessionStart) / (1000 * 60 * 60); // ساعت
+                  totalActiveTime += duration;
+                });
+                
+                stats.activeTimeHours = Math.round(totalActiveTime * 100) / 100;
+                resolve(stats);
+              });
+            });
+          });
+        });
+      }
+      
+      return c.json({
+        success: true,
+        stats,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('Error getting basic session stats:', error);
+      return c.json({ 
+        error: 'خطا در دریافت آمار پایه sessions',
+        message: error.message
+      }, 500);
+    }
+  });
+
+  // روت debug برای بررسی داده‌های Turso
+  app.get('/api/session/debug', async (c) => {
+    try {
+      const isProduction = process.env.NODE_ENV === 'production';
+      const isVercel = process.env.VERCEL === '1';
+      
+      if (isProduction || isVercel) {
+        const { createClient } = require('@libsql/client');
+        const client = createClient({
+          url: process.env.TURSO_DATABASE_URL,
+          authToken: process.env.TURSO_AUTH_TOKEN,
+        });
+        
+        // بررسی جداول موجود
+        const tablesResult = await client.execute("SELECT name FROM sqlite_master WHERE type='table'");
+        const tables = tablesResult.rows.map(row => row.name);
+        
+        // بررسی تعداد sessions
+        const sessionsResult = await client.execute('SELECT COUNT(*) as total FROM sessions');
+        const sessionsCount = sessionsResult.rows[0].total;
+        
+        // بررسی تعداد conversations
+        const conversationsResult = await client.execute('SELECT COUNT(*) as total FROM conversations');
+        const conversationsCount = conversationsResult.rows[0].total;
+        
+        // بررسی چند session نمونه
+        const sampleSessions = await client.execute('SELECT * FROM sessions LIMIT 3');
+        
+        // بررسی چند conversation نمونه
+        const sampleConversations = await client.execute('SELECT * FROM conversations LIMIT 3');
+        
+        return c.json({
+          success: true,
+          debug: {
+            tables,
+            sessionsCount,
+            conversationsCount,
+            sampleSessions: sampleSessions.rows,
+            sampleConversations: sampleConversations.rows,
+            environment: {
+              nodeEnv: process.env.NODE_ENV,
+              isVercel: process.env.VERCEL === '1',
+              hasTursoUrl: !!process.env.TURSO_DATABASE_URL,
+              hasTursoToken: !!process.env.TURSO_AUTH_TOKEN
+            }
+          },
+          timestamp: new Date().toISOString()
+        });
+        
+      } else {
+        return c.json({
+          success: true,
+          debug: {
+            message: 'Debug endpoint only available in production',
+            environment: {
+              nodeEnv: process.env.NODE_ENV,
+              isVercel: process.env.VERCEL === '1'
+            }
+          }
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error in debug endpoint:', error);
+      return c.json({ 
+        error: 'خطا در debug endpoint',
+        message: error.message
       }, 500);
     }
   });

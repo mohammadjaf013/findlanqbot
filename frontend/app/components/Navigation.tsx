@@ -21,7 +21,7 @@ export default function Navigation() {
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <img className="h-8 w-auto" src="/q.png" alt="FinlandQ" />
+              <img className="h-8 w-auto" src="/qchat.png" alt="FinlandQ" />
               <span className="mr-2 text-lg font-semibold text-gray-900">فنلاند کیو</span>
             </div>
           </div>

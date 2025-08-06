@@ -772,7 +772,7 @@ export default function FinlandQPage() {
       }
     } catch (error) {
       setIsLoading(false);
-      simulateStreaming('متأسفم، خطایی رخ داده است. برای اطلاعات تکمیلی با پشتیبانی شماره 91691021  تماس بگیرید.');
+      simulateStreaming('متأسفم، خطایی رخ داده است. ');
     }
   };
 
@@ -1381,7 +1381,7 @@ export default function FinlandQPage() {
         const successMessage: Message = {
           id: Date.now().toString(),
           type: 'assistant',
-          content: `🎉 واای عالی ${consultationData.salutationtype} ${consultationData.first_name}!\n\n✅ درخواستتون با موفقیت ثبت شد و همین الان به تیم ما رسید!\n\nدوستان ما تا 24 ساعت آینده باهاتون تماس می‌گیرن و مشاوره کاملتون رو می‌دن. نگران نباشید، حتماً بهتون زنگ می‌زنیم! 😊\n\n📋 کد پیگیری شما: ${result.data.code}\n\n📞 اگه عجله دارید: 91691021\n\nممنونم که به ما اعتماد کردید! 🙏`,
+          content: `🎉 واای عالی ${consultationData.salutationtype} ${consultationData.first_name}!\n\n✅ درخواستتون با موفقیت ثبت شد و همین الان به تیم ما رسید!\n\nدوستان ما تا 24 ساعت آینده باهاتون تماس می‌گیرن و مشاوره کاملتون رو می‌دن. نگران نباشید، حتماً بهتون زنگ می‌زنیم! 😊\n\n📋 کد پیگیری شما: ${result.data.code}\n\n \n\nممنونم که به ما اعتماد کردید! 🙏`,
           timestamp: new Date()
         };
         setMessages(prev => [...prev, successMessage]);
@@ -1403,7 +1403,7 @@ export default function FinlandQPage() {
       const errorMessage: Message = {
         id: Date.now().toString(),
         type: 'assistant',
-        content: 'اوه نه! 😔 یه مشکل فنی پیش اومده و نتونستم درخواستتون رو ثبت کنم.\n\nلطفاً دوباره تلاش کنید یا مستقیماً با شماره 91691021 تماس بگیرید تا دوستان ما راهنماییتون کنن.\n\nمعذرت می‌خوام بابت این مشکل! 🙏',
+        content: 'اوه نه! 😔 یه مشکل فنی پیش اومده و نتونستم درخواستتون رو ثبت کنم.\n\nلطفاً دوباره تلاش کنید .\n\nمعذرت می‌خوام بابت این مشکل! 🙏',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -1460,7 +1460,6 @@ export default function FinlandQPage() {
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-sm text-green-700">آنلاین</span>
               </div>
-              <div className="text-sm text-gray-600">پشتیبانی: 91691021</div>
               <Link 
                 href="/" 
                 className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#4385f6] transition-colors"
@@ -1581,7 +1580,7 @@ export default function FinlandQPage() {
                     >
                       {/* <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" /> */}
 
-                      <img src="q.png" className='w-full h-full object-contain text-white' />
+                      <img src="qchat.png" className='w-full h-full object-contain text-white' />
 
                     </motion.div>
                     <div>
