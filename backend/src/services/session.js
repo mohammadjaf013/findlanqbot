@@ -481,8 +481,24 @@ async function getSessionStats() {
         const totalSessions = inMemoryStorage.sessions.size;
         let oldestSession = null;
         
+        // محاسبه آمار امروز و دیروز
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+        
+        let todaySessions = 0;
+        let yesterdaySessions = 0;
+        
         for (const session of inMemoryStorage.sessions.values()) {
-          if (!oldestSession || new Date(session.createdAt) < new Date(oldestSession.createdAt)) {
+          const sessionDate = new Date(session.createdAt);
+          
+          if (sessionDate >= today) {
+            todaySessions++;
+          } else if (sessionDate >= yesterday && sessionDate < today) {
+            yesterdaySessions++;
+          }
+          
+          if (!oldestSession || sessionDate < new Date(oldestSession.createdAt)) {
             oldestSession = session;
           }
         }
@@ -490,7 +506,9 @@ async function getSessionStats() {
         return {
           totalSessions,
           activeSessions: totalSessions,
-          oldestSession: oldestSession ? oldestSession.createdAt : null
+          oldestSession: oldestSession ? oldestSession.createdAt : null,
+          todaySessions,
+          yesterdaySessions
         };
       }
     } catch (error) {
@@ -498,7 +516,9 @@ async function getSessionStats() {
       return {
         totalSessions: 0,
         activeSessions: 0,
-        oldestSession: null
+        oldestSession: null,
+        todaySessions: 0,
+        yesterdaySessions: 0
       };
     }
   }
@@ -507,6 +527,14 @@ async function getSessionStats() {
   await initSessionDatabase();
   
   return new Promise((resolve, reject) => {
+    // محاسبه تاریخ‌های امروز و دیروز
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+    
+    const todayStr = today.toISOString().split('T')[0];
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
     db.get('SELECT COUNT(*) as total FROM sessions', (err, row) => {
       if (err) {
         reject(err);
@@ -515,17 +543,35 @@ async function getSessionStats() {
       
       const totalSessions = row.total;
       
-      // دریافت قدیمی‌ترین session
-      db.get('SELECT MIN(created_at) as oldest FROM sessions', (err, oldestRow) => {
+      // دریافت آمار امروز
+      db.get('SELECT COUNT(*) as today FROM sessions WHERE DATE(created_at) = ?', [todayStr], (err, todayRow) => {
         if (err) {
           reject(err);
           return;
         }
         
-        resolve({
-          totalSessions,
-          activeSessions: totalSessions, // فعلاً همه active هستند
-          oldestSession: oldestRow.oldest
+        // دریافت آمار دیروز
+        db.get('SELECT COUNT(*) as yesterday FROM sessions WHERE DATE(created_at) = ?', [yesterdayStr], (err, yesterdayRow) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          
+          // دریافت قدیمی‌ترین session
+          db.get('SELECT MIN(created_at) as oldest FROM sessions', (err, oldestRow) => {
+            if (err) {
+              reject(err);
+              return;
+            }
+            
+            resolve({
+              totalSessions,
+              activeSessions: totalSessions, // فعلاً همه active هستند
+              oldestSession: oldestRow.oldest,
+              todaySessions: todayRow.today,
+              yesterdaySessions: yesterdayRow.yesterday
+            });
+          });
         });
       });
     });

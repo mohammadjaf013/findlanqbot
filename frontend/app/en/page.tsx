@@ -75,7 +75,7 @@ const cleanTableFormat = (content: string): string => {
         const firstFour = parts.slice(0, 4);
         const hasHeaders = firstFour.some(part => 
           part.includes('✨') || part.includes('💰') || part.includes('📝') || 
-          part.includes('یورو') || part.includes('هزینه') || part.includes('توضیحات')
+          part.includes('euro') || part.includes('cost') || part.includes('description')
         );
         
         if (hasHeaders) {
@@ -141,7 +141,7 @@ const cleanTableFormat = (content: string): string => {
 const MarkdownComponents = {
   table: ({ children }: any) => (
     <div className="overflow-x-auto my-4">
-      <table className="w-full border-collapse border border-gray-300 text-right min-w-full" dir="rtl">
+      <table className="w-full border-collapse border border-gray-300 text-left min-w-full" dir="ltr">
         {children}
       </table>
     </div>
@@ -164,9 +164,9 @@ const MarkdownComponents = {
   p: ({ children }: any) => <p className="mb-2">{children}</p>,
   br: () => <br />,
   // List components for proper bullet point rendering
-  ul: ({ children }: any) => <ul className="list-disc list-inside mb-2 space-y-1 text-right" dir="rtl">{children}</ul>,
-  ol: ({ children }: any) => <ol className="list-decimal list-inside mb-2 space-y-1 text-right" dir="rtl">{children}</ol>,
-  li: ({ children }: any) => <li className="text-right">{children}</li>,
+  ul: ({ children }: any) => <ul className="list-disc list-inside mb-2 space-y-1 text-left" dir="ltr">{children}</ul>,
+  ol: ({ children }: any) => <ol className="list-decimal list-inside mb-2 space-y-1 text-left" dir="ltr">{children}</ol>,
+  li: ({ children }: any) => <li className="text-left">{children}</li>,
   // Add fallback for any unrecognized elements
   code: ({ children }: any) => <code className="bg-gray-100 px-1 py-0.5 rounded text-sm">{children}</code>,
   pre: ({ children }: any) => <pre className="bg-gray-100 p-2 rounded overflow-x-auto">{children}</pre>,
@@ -217,7 +217,7 @@ function QuickReplyOptions({ question, onSelect, isLoading }: {
     }
   };
 
-  // گزینه‌ای
+  // Single-choice
   if (question.options && !question.multiple) {
     return (
       <div className="space-y-2">
@@ -242,7 +242,7 @@ function QuickReplyOptions({ question, onSelect, isLoading }: {
     );
   }
 
-  // چند گزینه‌ای
+  // Multi-choice
   if (question.options && question.multiple) {
     return (
       <div className="space-y-3">
@@ -273,14 +273,14 @@ function QuickReplyOptions({ question, onSelect, isLoading }: {
             disabled={isLoading}
             className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all duration-200 disabled:opacity-50"
           >
-            تأیید انتخاب ({selectedOptions.length} مورد)
+            Confirm selection ({selectedOptions.length})
           </button>
         )}
       </div>
     );
   }
 
-  // ورودی متنی
+  // Text input
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -295,7 +295,7 @@ function QuickReplyOptions({ question, onSelect, isLoading }: {
             transition={{ duration: 0.2 }}
             value={textInput}
             onChange={(e) => setTextInput(e.target.value)}
-            placeholder="پاسخ خود را بنویسید..."
+            placeholder="Type your answer..."
             className="w-full resize-none rounded-xl border border-gray-200 px-3 sm:px-4 py-2 sm:py-3 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm focus:shadow-md transition-all duration-300 text-sm sm:text-base"
             rows={3}
             disabled={isLoading}
@@ -309,7 +309,7 @@ function QuickReplyOptions({ question, onSelect, isLoading }: {
             value={textInput}
             onChange={(e) => setTextInput(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="پاسخ خود را بنویسید..."
+            placeholder="Type your answer..."
             className="w-full rounded-xl border border-gray-200 px-3 sm:px-4 py-2 sm:py-3 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm focus:shadow-md transition-all duration-300 text-sm sm:text-base"
             disabled={isLoading}
           />
@@ -334,27 +334,27 @@ function QuickReplyOptions({ question, onSelect, isLoading }: {
 const readyPrompts = [
   {
     id: 1,
-    title: "مهاجرت تحصیلی",
-    description: "راهنمایی کامل برای تحصیل در فنلاند",
-    prompt: "می‌خوام برای تحصیل در فنلاند اقدام کنم. لطفاً مراحل و شرایط رو توضیح بدید."
+    title: "Study Immigration",
+    description: "Complete guidance for studying in Finland",
+    prompt: "I want to apply to study in Finland. Please explain the steps and requirements."
   },
   {
     id: 2,
-    title: "استارتاپ ویزای فنلاند",
-    description: "اطلاعات ویزای استارتاپ و کارآفرینی فنلاند",
-    prompt: "می‌خوام برای ویزای استارتاپ فنلاند اقدام کنم. شرایط و مراحل رو بگید."
+    title: "Finland Startup Visa",
+    description: "Information about startup and entrepreneurship visa in Finland",
+    prompt: "I want to apply for Finland's Startup Visa. Please provide the conditions and steps."
   },
   {
     id: 3,
-    title: "هزینه‌های زندگی در فنلاند",
-    description: "بررسی هزینه‌های زندگی در فنلاند",
-    prompt: "هزینه‌های زندگی در فنلاند چقدره؟ شامل مسکن، غذا، حمل و نقل."
+    title: "Cost of Living in Finland",
+    description: "Overview of living costs in Finland",
+    prompt: "What is the cost of living in Finland? Including housing, food, and transportation."
   },
   {
     id: 4,
-    title: "اطلاعات عمومی در مورد فنلاند",
-    description: "اطلاعات کلی و عمومی در مورد فنلاند",
-    prompt: "می‌خوام اطلاعات عمومی در مورد فنلاند بدونم. فرهنگ، آب و هوا، مردم و..."
+    title: "General Information about Finland",
+    description: "General overview about Finland",
+    prompt: "I want general information about Finland: culture, weather, people, etc."
   }
 ];
 
@@ -364,7 +364,7 @@ export default function FinlandQ4Page() {
     {
       id: '1',
       type: 'assistant',
-      content: 'سلام! من «کیو» هستم، دستیار هوشمند و دوست شما در فنلاندکیو. 🇫🇮\n\nروی کمک من برای پیدا کردن بهترین مسیرهای مهاجرت، تحصیل و کار در فنلاند حساب کنید. هر سوالی دارید، بپرسید!\n\n💡 نکته مهم: اگر برای شروع مسیر خود نیاز به راهنمایی تخصصی دارید، کافی‌ست بنویسید "مشاوره می‌خوام" تا فوراً فرم مشاوره رایگان را برایتان ارسال کنم.\n\nآماده‌ام تا به شما کمک کنم. از کجا شروع کنیم؟',
+      content: 'Hello! I am Q, your smart assistant at FinlandQ. 🇫🇮\n\nCount on me to help you find the best paths for immigration, study, and work in Finland. Ask me anything!\n\n💡 Tip: If you need professional guidance to start, just type "I want consultation" and I will open the free consultation form for you.\n\nI am ready to help. Where shall we start?',
       timestamp: new Date()
     }
   ]);
@@ -377,15 +377,18 @@ export default function FinlandQ4Page() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // سوالات مشاوره
+  // Consultation questions
   const consultationQuestions = [
     { 
       field: 'salutationtype', 
-      question: 'سلام! خوشحالم که برای مشاوره با من در تماس هستید 😊\n\nابتدا بگید ترجیح دارید چطور با شما صحبت کنم؟', 
-      options: ['آقای', 'خانم'],
-      validation: { required: true, message: 'لطفاً نحوه خطاب را انتخاب کنید' },
+      question: 'Hello! I am glad you are here for consultation 😊\n\nFirst, how would you like me to address you?', 
+      options: [
+        { value: 'آقای', label: 'Mr.' },
+        { value: 'خانم', label: 'Ms.' }
+      ],
+      validation: { required: true, message: 'Please select how I should address you' },
       responseTemplates: [
-        'خیلی ممنون 👋',
+        'Thank you 👋',
         // 'عالی {value}! 😊',
         // 'خوشحالم {value}! ✨',
         // 'خیلی خوب {value}! 🎯'
@@ -393,130 +396,109 @@ export default function FinlandQ4Page() {
     },
     { 
       field: 'first_name', 
-      question: 'اسم شما چیه؟ 🤔', 
+      question: 'What is your first name? 🤔', 
       type: 'text',
-      validation: { required: true, message: 'لطفاً اسمتون رو بگید' },
+      validation: { required: true, message: 'Please enter your first name' },
       responseTemplates: [
-        
-        'ممنونم {value}! اسم قشنگی دارید 😊',
-        'چه اسم دوست‌داشتنی‌ای {value}! 💫',
-        'خوشحالم باهاتون آشنا شدم {value}! 🎉',
+        'Thanks {value}! That’s a lovely name 😊',
+        'Nice to meet you, {value}! 🎉',
       ]
     },
     { 
       field: 'last_name', 
-      question: '{first_name} جان اسم فامیلتون هم لطف کنید', 
+      question: '{first_name}, may I have your last name as well?', 
       type: 'text',
-      validation: { required: true, message: 'اسم فامیل هم مهمه برای من' },
+      validation: { required: true, message: 'Last name is required' },
       responseTemplates: [
-        'عالی {first_name} {value}! 👏',
-        'خیلی خوب! حالا اسم کاملتون رو دارم  {first_name} {value} 🎯',
-        'پرفکت!  {first_name} {value} عزیز ✨',
-        'ممنونم!  {first_name} {value} خوشحال شدم 😊'
+        'Great, {first_name} {value}! 👏',
+        'Perfect! Now I have your full name {first_name} {value} 🎯',
       ]
     },
     { 
       field: 'age', 
-      question: 'چند سالتونه اگه اجازه باشه؟ (برای بهتر راهنماییتون مهمه)', 
+      question: 'How old are you? (This helps me guide you better)', 
       type: 'number',
-      validation: { required: true, message: 'سن مهمه تا بتونم بهتر کمکتون کنم' },
+      validation: { required: true, message: 'Age is required to better assist you' },
       responseTemplates: [
-        'باشه، {value} سال! سن خوبیه برای شروع یه برنامه جدید 🚀',
-        '{value} سالگی؟ عالیه! یه سن مناسب برای تغییر 💪',
-        'پرفکت! {value} سال سن مناسبی برای قدم‌های جدید 🌟',
-        'خوب! {value} سالگی بهترین زمان برای چالش‌های جدیده 🎯'
+        'Got it, {value} years old! 🚀',
+        'Perfect! {value} is a great age for new steps 🌟',
       ]
     },
     { 
       field: 'email', 
-      question: 'ایمیلتون رو بدید تا بتونم جزئیات مشاوره رو براتون ایمیل کنم:', 
+      question: 'Please share your email so I can send consultation details:', 
       type: 'email',
-      validation: { required: true, type: 'email', message: 'یه ایمیل درست بدید لطفاً' },
+      validation: { required: true, type: 'email', message: 'Please enter a valid email' },
       responseTemplates: [
-        'ایمیلتون رو یادداشت کردم 📧',
-        'پرفکت! ایمیل ذخیره شد ✅',
-        'عالی، ایمیلتون رو دارم 📩',
-        'ممنونم، ایمیل ثبت شد 💌'
+        'Email noted 📧',
+        'Perfect! Email saved ✅',
       ]
     },
     { 
       field: 'mobile', 
-      question: 'شماره موبایلتون رو هم بدید تا در صورت نیاز تماس بگیرم:', 
+      question: 'Please share your mobile number so we can contact you if needed:', 
       type: 'tel',
-      validation: { required: true, message: 'شماره موبایل ضروریه برای تماس' },
+      validation: { required: true, message: 'Mobile number is required' },
       responseTemplates: [
-        'شمارتون رو ذخیره کردم 📱',
-        'عالی! شماره تماس ثبت شد ☎️',
-        'پرفکت، شمارتون رو دارم 📞',
-        'ممنونم، شماره موبایل ذخیره شد 📲'
+        'Saved your number 📱',
+        'Great! Phone number saved ☎️',
       ]
     },
     { 
       field: 'city', 
-      question: 'تو کدوم شهر زندگی می‌کنید؟', 
+      question: 'Which city do you live in?', 
       type: 'text',
-      validation: { required: true, message: 'شهرتون رو بگید تا بهتر راهنماییتون کنم' },
+      validation: { required: true, message: 'City is required to guide you better' },
       responseTemplates: [
-        '{value}! شهر خوبیه 🏙️',
-        'واو {value}! شهر قشنگی انتخاب کردید 🌆',
-        '{value}؟ عالیه! اونجا فرصت‌های خوبی هست 🏘️',
-        'پرفکت! {value} شهر مناسبیه 🌇'
+        '{value}! Nice city 🏙️',
       ]
     },
     { 
       field: 'acquainted', 
-      question: 'راستی چطور ما رو پیدا کردید؟ کجا ازمون شنیدید؟', 
+      question: 'How did you find us?', 
       options: [
-        { value: 'search', label: 'جستجو' },
-        { value: 'friend', label: 'معرفی دوستان و آشنایان' },
-        { value: 'instagram', label: 'اینستاگرام' },
-        { value: 'telegram', label: 'تلگرام' },
-        { value: 'twitter', label: 'توئیتر' },
-        { value: 'youtube', label: 'یوتیوب فنلاندکیو' },
-        { value: 'ad', label: 'تبلیغات' },
-        { value: 'چت آنلاین یا وبینار', label: 'چت آنلاین یا وبینار' },
-        { value: 'فیسبوک', label: 'فیسبوک' },
-        { value: 'لینکدین', label: 'لینکدین' },
-        { value: 'بازاریابی تلفنی', label: 'بازاریابی تلفنی' },
-        { value: 'سایر', label: 'سایر' }
+        { value: 'search', label: 'Search' },
+        { value: 'friend', label: 'Friends/Referrals' },
+        { value: 'instagram', label: 'Instagram' },
+        { value: 'telegram', label: 'Telegram' },
+        { value: 'twitter', label: 'Twitter/X' },
+        { value: 'youtube', label: 'YouTube FinlandQ' },
+        { value: 'ad', label: 'Ads' },
+        { value: 'چت آنلاین یا وبینار', label: 'Online chat or webinar' },
+        { value: 'فیسبوک', label: 'Facebook' },
+        { value: 'لینکدین', label: 'LinkedIn' },
+        { value: 'بازاریابی تلفنی', label: 'Phone marketing' },
+        { value: 'سایر', label: 'Other' }
       ],
-      validation: { required: true, message: 'این اطلاعات خیلی مهمه برای ما' },
+      validation: { required: true, message: 'This information helps us a lot' },
       responseTemplates: [
-        'آها، از {value}! خوبه 👍',
-        'جالبه، {value}! ممنونم 🤝',
-        'عالی! از {value} پیدامون کردید 💫',
-        'خوب، {value}! مرسی از اطلاع 🙏'
+        'Oh, from {value}! Nice 👍',
       ]
     },
     { 
       field: 'position', 
-      question: 'عالی! حالا می‌خوام بدونم از کدام محصولات ما استفاده می‌کنید یا قصد دارید استفاده کنید؟ (می‌تونید چند مورد انتخاب کنید)', 
+      question: 'Great! Which of our products are you interested in? (You can choose multiple)', 
       options: [
-        { value: 'چهار فصل (آمیس)', label: 'چهار فصل (آمیس)' },
-        { value: 'high-school', label: 'دبیرستان' },
-        { value: 'university', label: 'کارشناسی' },
-        { value: 'master', label: 'کارشناسی ارشد' },
-        { value: 'startup', label: 'استارتاپ و سرمایه‌گذاری' }
+        { value: 'چهار فصل (آمیس)', label: 'Ammis (Vocational)' },
+        { value: 'high-school', label: 'High School' },
+        { value: 'university', label: 'Bachelor' },
+        { value: 'master', label: 'Master' },
+        { value: 'startup', label: 'Startup & Investment' }
       ], 
       multiple: true,
-      validation: { required: true, message: 'این اطلاعات برای ارائه بهترین خدمات ضروریه' },
+      validation: { required: true, message: 'This helps us provide the best service' },
       responseTemplates: [
-        'عالی! پس به {value} علاقه‌مندید. می‌تونم کاملاً راهنماییتون کنم 🎯',
-        'پرفکت! {value} انتخاب فوق‌العاده‌ای بوده. بهترین مشاوره رو براتون آماده می‌کنم 💪',
-        'خیلی خوب! {value} گزینه‌های عالی‌ن. فرصت‌های فوق‌العاده‌ای پیش رویتونه 🌟',
-        'عالیه! {value} درست انتخاب کردید. این محصولات آینده درخشانی براتون رقم می‌زنه 🚀'
+        'Great! You are interested in {value}. I can fully guide you 🎯',
       ]
     },
     { 
       field: 'message', 
-      question: 'آخرین سوال: اگه چیز خاصی هست که می‌خواید بگید یا سوال خاصی دارید، اینجا بنویسید (اختیاری):', 
+      question: 'Final question: If you have any specific notes or questions, write them here (optional):', 
       type: 'textarea',
       validation: { required: false },
       responseTemplates: [
-        'ممنونم که وقت گذاشتید و کاملش کردید! 🙏',
-        'عالی! حالا همه اطلاعات رو دارم 🎉',
-        'پرفکت! همه چی آماده شد ✨',
-        'خیلی ممنونم! اطلاعات کامل شد 💯'
+        'Thanks for your time! 🙏',
+        'Great! I have all the info now 🎉',
       ]
     }
   ];
@@ -550,7 +532,7 @@ export default function FinlandQ4Page() {
         setMessages(historyMessages);
       }
     } catch (error) {
-      console.error('خطا در بارگذاری تاریخچه مکالمه:', error);
+      console.error('Error loading conversation history:', error);
     }
   };
 
@@ -571,7 +553,7 @@ export default function FinlandQ4Page() {
         window.history.replaceState({}, '', newUrl.toString());
       }
     } catch (error) {
-      console.error('خطا در ایجاد session:', error);
+      console.error('Error creating session:', error);
     }
   };
 
@@ -591,8 +573,8 @@ export default function FinlandQ4Page() {
     
     // Check for direct consultation requests
     const directRequests = [
-      'فرم مشاوره رو پر کن',
-      'پیشنهاد می‌کنم فرم مشاوره',
+      'open consultation form',
+      'i suggest the consultation form',
     ];
     
     const hasDirectRequest = directRequests.some(phrase =>
@@ -601,8 +583,8 @@ export default function FinlandQ4Page() {
     
     // Check for consultation-related phrases that suggest consultation
     const consultationPhrases = [
-      'فرم مشاوره',
-      'فرم درخواست مشاوره'
+      'consultation form',
+      'request a consultation'
     ];
     
     const hasConsultationPhrases = consultationPhrases.some(phrase =>
@@ -695,13 +677,13 @@ export default function FinlandQ4Page() {
             hasConsultationRequest
           });
           setTimeout(() => {
-            // اگر پاسخ شامل درخواست مشاوره است، ابتدا تأیید بگیر
+            // If response suggests consultation, ask for confirmation first
             console.log('📝 Setting up confirmation step...');
             // ابتدا پیام تأیید ارسال کن
             const confirmationMessage: Message = {
               id: `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               type: 'assistant',
-              content: 'آیا می‌خواهید فرم مشاوره را باز کنم؟ لطفاً "بله" یا "خیر" انتخاب کنید.',
+              content: 'Would you like me to open the consultation form? Please choose "Yes" or "No".',
               timestamp: new Date()
             };
             setMessages(prev => [...prev, confirmationMessage]);
@@ -714,15 +696,15 @@ export default function FinlandQ4Page() {
           }, 1000);
         }
       } else {
-        throw new Error(data.error || 'خطا در دریافت پاسخ');
+        throw new Error(data.error || 'Error receiving response');
       }
     } catch (error) {
-      console.error('خطا در ارسال پیام:', error);
+      console.error('Error sending message:', error);
       setIsLoading(false);
       const errorMessage: Message = {
         id: `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type: 'assistant',
-        content: 'متأسفم، خطایی رخ داده است. ',
+        content: 'Sorry, an error occurred. ',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -753,7 +735,7 @@ export default function FinlandQ4Page() {
     if (validation.type === 'email' && typeof answer === 'string') {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(answer)) {
-        return { isValid: false, errorMessage: 'فرمت ایمیل صحیح نیست' };
+        return { isValid: false, errorMessage: 'Invalid email format' };
       }
     }
 
@@ -761,7 +743,7 @@ export default function FinlandQ4Page() {
     if (question.type === 'tel' && typeof answer === 'string') {
       const mobileRegex = /^09\d{9}$/;
       if (!mobileRegex.test(answer.replace(/\s/g, ''))) {
-        return { isValid: false, errorMessage: 'شماره موبایل باید با 09 شروع شود و 11 رقم باشد' };
+        return { isValid: false, errorMessage: 'Mobile number must start with 09 and be 11 digits' };
       }
     }
 
@@ -771,7 +753,7 @@ export default function FinlandQ4Page() {
       const convertedAnswer = convertPersianToEnglishNumbers(answer);
       const age = parseInt(convertedAnswer);
       if (isNaN(age) || age < 1 || age > 120) {
-        return { isValid: false, errorMessage: 'سن باید عددی بین 1 تا 120 باشد' };
+        return { isValid: false, errorMessage: 'Age must be a number between 1 and 120' };
       }
     }
 
@@ -793,8 +775,8 @@ export default function FinlandQ4Page() {
     if (consultationStep === -1) {
       console.log('🎯 Processing confirmation step with answer:', answer);
       const answerText = (Array.isArray(answer) ? answer[0] : answer).toLowerCase();
-      const confirmationWords = ['بله', 'آره', 'yes', 'اوکی', 'ok', 'okay', 'اوکه', 'باشه', 'حتماً', 'البته', 'آماده', 'ready', 'بزن بریم', 'شروع کن', 'موافقم', 'قبوله'];
-      const rejectionWords = ['خیر', 'نه', 'no', 'نمی‌خوام', 'نمی‌خواد', 'نیازی نیست', 'فعلاً نه'];
+      const confirmationWords = ['yes', 'ok', 'okay', 'ready', 'sure', 'go ahead'];
+      const rejectionWords = ['no', 'not now', 'later'];
       
       console.log('🔍 Checking answer against confirmation/rejection words:', {
         answerText,
@@ -804,7 +786,7 @@ export default function FinlandQ4Page() {
       
       if (confirmationWords.some(word => answerText.includes(word))) {
         console.log('✅ User confirmed - proceeding to consultation questions');
-        // کاربر تأیید کرد، شروع سوالات اصلی
+        // User confirmed - start main questions
         const userMessage: Message = {
           id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           type: 'user',
@@ -813,12 +795,12 @@ export default function FinlandQ4Page() {
         };
         setMessages(prev => [...prev, userMessage]);
         
-        // اضافه کردن تأخیر بیشتر برای وضوح بیشتر
+        // Add a bit more delay for clarity
         setTimeout(() => {
           const welcomeMessage: Message = {
             id: `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             type: 'assistant',
-            content: '🎯 عالی! حالا برای شروع من چند تا اطلاعات شما نیاز دارم که بهتر بتونم راهنماییتون کنم. اوکی هستید؟',
+            content: '🎯 Great! To begin, I need some info to guide you better. Are you ready?',
             timestamp: new Date()
           };
           setMessages(prev => [...prev, welcomeMessage]);
@@ -842,7 +824,6 @@ export default function FinlandQ4Page() {
         return;
       } else if (rejectionWords.some(word => answerText.includes(word))) {
         console.log('❌ User rejected - exiting consultation mode');
-        // کاربر رد کرد
         const userMessage: Message = {
           id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           type: 'user',
@@ -855,7 +836,7 @@ export default function FinlandQ4Page() {
           const rejectionMessage: Message = {
             id: `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             type: 'assistant',
-            content: 'مشکلی نیست! وقتی آماده شدید برای مشاوره، فقط "مشاوره می‌خوام" بگید 😊',
+            content: 'No problem! When you are ready for consultation, just say "I want consultation" 😊',
             timestamp: new Date()
           };
           setMessages(prev => [...prev, rejectionMessage]);
@@ -869,7 +850,6 @@ export default function FinlandQ4Page() {
         return;
       } else {
         console.log('❓ User gave unclear answer - asking for clarification');
-        // جواب نامناسب
         const userMessage: Message = {
           id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           type: 'user',
@@ -882,7 +862,7 @@ export default function FinlandQ4Page() {
           const clarificationMessage: Message = {
             id: `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             type: 'assistant',
-            content: 'لطفاً "بله" یا "خیر" بگویید تا بتوانم بهتر راهنماییتان کنم 😊',
+            content: 'Please say "Yes" or "No" so I can assist you better 😊',
             timestamp: new Date()
           };
           setMessages(prev => [...prev, clarificationMessage]);
@@ -892,7 +872,7 @@ export default function FinlandQ4Page() {
     }
     
     console.log('📋 Processing regular consultation question:', consultationStep);
-    // سوالات اصلی
+    // Main questions
     const currentQuestion = consultationQuestions[consultationStep];
     const validation = validateAnswer(currentQuestion, answer);
     
@@ -900,14 +880,14 @@ export default function FinlandQ4Page() {
       const errorMessage: Message = {
         id: `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type: 'assistant',
-        content: `❌ ${validation.errorMessage}\n\nلطفاً دوباره پاسخ دهید:`,
+        content: `❌ ${validation.errorMessage}\n\nPlease answer again:`,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
       return;
     }
 
-    // ذخیره پاسخ
+    // Save answer
     const fieldName = currentQuestion.field as keyof ConsultationFormData;
     
     // Convert Persian numbers to English for age field
@@ -922,7 +902,7 @@ export default function FinlandQ4Page() {
     };
     setConsultationData(newConsultationData);
 
-    // اضافه کردن پیام کاربر
+    // Add user message
     const userMessage: Message = {
       id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       type: 'user',
@@ -931,15 +911,15 @@ export default function FinlandQ4Page() {
     };
     setMessages(prev => [...prev, userMessage]);
 
-    // بررسی اینکه آیا آخرین سوال بود
+    // Check if it was the last question
     if (consultationStep === consultationQuestions.length - 1) {
       // ارسال درخواست
       setTimeout(() => {
-        // تولید خلاصه گفتگو و تحلیل فروش
+        // Generate conversation summary and sales analysis
         const conversationSummary = generateConversationSummary();
         const salesAnalysis = generateSalesAnalysis();
         
-        // ذخیره تحلیل‌ها در consultationData
+        // Save analyses in consultationData
         setConsultationData(prev => ({
           ...prev,
           conversation_summary: conversationSummary,
@@ -947,8 +927,8 @@ export default function FinlandQ4Page() {
           source:"chat"
         }));
         
-        // ایجاد خلاصه اطلاعات
-        const rawSummaryText = `عالی! همه اطلاعات رو گرفتم. این اطلاعات هم بده که برای همکارم بفرستم که با شما تماس بگیره:\n\n📝 **خلاصه اطلاعات شما:**\n• نام:  ${newConsultationData.first_name} ${newConsultationData.last_name}\n• سن: ${newConsultationData.age} سال\n• شهر: ${newConsultationData.city}\n• ایمیل: ${newConsultationData.email}\n• موبایل: ${newConsultationData.mobile}\n• آشنایی: ${newConsultationData.acquainted}\n• محصولات مورد علاقه: ${Array.isArray(newConsultationData.position) ? newConsultationData.position.join(', ') : newConsultationData.position}\n${newConsultationData.message ? `• پیام اضافی: ${newConsultationData.message}` : ''}\n\nدر حال ارسال درخواست مشاوره...`;
+        // Build English summary text
+        const rawSummaryText = `Great! I have received all your information. Please review before we submit:\n\n📝 **Your Summary:**\n• Name:  ${newConsultationData.first_name} ${newConsultationData.last_name}\n• Age: ${newConsultationData.age}\n• City: ${newConsultationData.city}\n• Email: ${newConsultationData.email}\n• Mobile: ${newConsultationData.mobile}\n• Source: ${newConsultationData.acquainted}\n• Interested Products: ${Array.isArray(newConsultationData.position) ? newConsultationData.position.join(', ') : newConsultationData.position}\n${newConsultationData.message ? `• Additional message: ${newConsultationData.message}` : ''}\n\nSubmitting your request...`;
         const summaryText = formatSummaryText(rawSummaryText);
         
         const processingMessage: Message = {
@@ -965,16 +945,16 @@ export default function FinlandQ4Page() {
         }, 100);
       }, 1000);
     } else {
-      // سوال بعدی با پاسخ شخصی‌سازی شده
+      // Next question with personalized response
       setTimeout(() => {
         const nextQuestion = consultationQuestions[consultationStep + 1];
         
-        // تولید پاسخ شخصی‌سازی شده
+        // Generate personalized response
         let personalizedResponse = '';
         if (currentQuestion.responseTemplates && currentQuestion.responseTemplates.length > 0) {
           const randomTemplate = currentQuestion.responseTemplates[Math.floor(Math.random() * currentQuestion.responseTemplates.length)];
           
-          // جایگزینی متغیرها در template
+          // Replace variables in template
           let valueToShow = Array.isArray(answer) ? answer.join(', ') : answer;
           if (fieldName === 'age' && typeof valueToShow === 'string') {
             valueToShow = convertPersianToEnglishNumbers(valueToShow);
@@ -987,7 +967,7 @@ export default function FinlandQ4Page() {
             .replace('{last_name}', newConsultationData.last_name || '');
         }
 
-        // اضافه کردن پاسخ شخصی‌سازی شده
+        // Add personalized response
         if (personalizedResponse) {
           const responseMessage: Message = {
             id: `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -998,9 +978,9 @@ export default function FinlandQ4Page() {
           setMessages(prev => [...prev, responseMessage]);
         }
 
-        // اضافه کردن سوال بعدی
+        // Add next question
         setTimeout(() => {
-          // جایگزینی متغیرها در سوال
+          // Replace variables in question
           let processedQuestion = nextQuestion.question;
           processedQuestion = processedQuestion
             .replace('{first_name}', newConsultationData.first_name || '')
@@ -1020,66 +1000,66 @@ export default function FinlandQ4Page() {
     }
   };
 
-  // تولید خلاصه گفتگو
+  // Generate conversation summary
   const generateConversationSummary = () => {
     const userMessages = messages.filter(m => m.type === 'user');
     const keywords = extractKeywords(userMessages.map(m => m.content).join(' '));
     
-    let summary = '🎯 **خلاصه گفتگو:**\n';
+    let summary = '🎯 **Conversation Summary:**\n';
     
     // تحلیل موضوعات اصلی
     const topics = analyzeTopics(userMessages);
     if (topics.length > 0) {
-      summary += `• موضوعات پرسیده شده: ${topics.join(', ')}\n`;
+      summary += `• Topics discussed: ${topics.join(', ')}\n`;
     }
     
     // تحلیل نیازها
     const needs = analyzeNeeds(userMessages);
     if (needs.length > 0) {
-      summary += `• نیازهای کاربر: ${needs.join(', ')}\n`;
+      summary += `• User needs: ${needs.join(', ')}\n`;
     }
     
     // کلمات کلیدی مهم
     if (keywords.length > 0) {
-      summary += `• کلمات کلیدی: ${keywords.slice(0, 5).join(', ')}\n`;
+      summary += `• Keywords: ${keywords.slice(0, 5).join(', ')}\n`;
     }
     
     return summary;
   };
 
-  // تولید تحلیل فروش
+  // Generate sales analysis
   const generateSalesAnalysis = () => {
     const userMessages = messages.filter(m => m.type === 'user');
     const allUserText = userMessages.map(m => m.content).join(' ').toLowerCase();
     
-    let analysis = '📊 **تحلیل فروش برای تیم مارکتینگ:**\n';
+    let analysis = '📊 **Sales analysis for the marketing team:**\n';
     
     // تحلیل سطح علاقه
     const interestLevel = calculateInterestLevel(allUserText);
-    analysis += `• سطح علاقه: ${interestLevel}\n`;
+    analysis += `• Interest level: ${interestLevel}\n`;
     
     // تحلیل عجله خرید
     const urgency = calculateUrgency(allUserText);
-    analysis += `• فوریت خرید: ${urgency}\n`;
+    analysis += `• Purchase urgency: ${urgency}\n`;
     
     // نقاط قوت برای فروش
     const salesPoints = identifySalesPoints();
     if (salesPoints.length > 0) {
-      analysis += `• نقاط قوت فروش: ${salesPoints.join(', ')}\n`;
+      analysis += `• Sales points: ${salesPoints.join(', ')}\n`;
     }
     
     // پیشنهادات مارکتینگ
     const marketingTips = generateMarketingTips();
     if (marketingTips.length > 0) {
-      analysis += `• پیشنهادات: ${marketingTips.join(', ')}\n`;
+      analysis += `• Suggestions: ${marketingTips.join(', ')}\n`;
     }
     
     return analysis;
   };
 
-  // توابع کمکی
+  // Helper functions
   const extractKeywords = (text: string) => {
-    const keywords = ['مهاجرت', 'تحصیل', 'کار', 'فنلاند', 'ویزا', 'دانشگاه', 'زندگی', 'اقامت', 'سرمایه', 'استارتاپ'];
+    const keywords = ['immigration', 'study', 'work', 'finland', 'visa', 'university', 'life', 'residence', 'investment', 'startup'];
     return keywords.filter(keyword => text.toLowerCase().includes(keyword));
   };
 
@@ -1087,10 +1067,10 @@ export default function FinlandQ4Page() {
     const topics = [];
     const allText = userMessages.map(m => m.content).join(' ').toLowerCase();
     
-    if (allText.includes('تحصیل') || allText.includes('دانشگاه') || allText.includes('مدرک')) topics.push('تحصیل');
-    if (allText.includes('کار') || allText.includes('شغل') || allText.includes('استخدام')) topics.push('کاریابی');
-    if (allText.includes('مهاجرت') || allText.includes('اقامت') || allText.includes('ویزا')) topics.push('مهاجرت');
-    if (allText.includes('سرمایه') || allText.includes('استارتاپ') || allText.includes('کسب‌وکار')) topics.push('سرمایه‌گذاری');
+    if (allText.includes('study') || allText.includes('university') || allText.includes('degree')) topics.push('study');
+    if (allText.includes('work') || allText.includes('job') || allText.includes('hire')) topics.push('employment');
+    if (allText.includes('immigration') || allText.includes('residence') || allText.includes('visa')) topics.push('immigration');
+    if (allText.includes('investment') || allText.includes('startup') || allText.includes('business')) topics.push('investment');
     
     return topics;
   };
@@ -1099,48 +1079,47 @@ export default function FinlandQ4Page() {
     const needs = [];
     const allText = userMessages.map(m => m.content).join(' ').toLowerCase();
     
-    if (allText.includes('راهنمایی') || allText.includes('کمک') || allText.includes('مشاوره')) needs.push('راهنمایی تخصصی');
-    if (allText.includes('سریع') || allText.includes('فوری') || allText.includes('زود')) needs.push('خدمات سریع');
-    if (allText.includes('ارزان') || allText.includes('قیمت') || allText.includes('هزینه')) needs.push('قیمت مناسب');
+    if (allText.includes('guide') || allText.includes('help') || allText.includes('consultation')) needs.push('professional guidance');
+    if (allText.includes('fast') || allText.includes('urgent') || allText.includes('soon')) needs.push('fast service');
+    if (allText.includes('cheap') || allText.includes('price') || allText.includes('cost')) needs.push('affordable price');
     
     return needs;
   };
 
   const calculateInterestLevel = (text: string) => {
     let score = 0;
-    if (text.includes('خیلی علاقه') || text.includes('حتماً می‌خوام')) score += 3;
-    if (text.includes('علاقه‌مند') || text.includes('مشاوره می‌خوام')) score += 2;
-    if (text.includes('سوال دارم') || text.includes('بگید')) score += 1;
+    if (text.includes('very interested') || text.includes('definitely want')) score += 3;
+    if (text.includes('interested') || text.includes('i want consultation')) score += 2;
+    if (text.includes('i have a question') || text.includes('tell me')) score += 1;
     
-    if (score >= 3) return 'بسیار بالا 🔥';
-    if (score >= 2) return 'بالا ⭐';
-    return 'متوسط 📝';
+    if (score >= 3) return 'Very high 🔥';
+    if (score >= 2) return 'High ⭐';
+    return 'Medium 📝';
   };
 
   const calculateUrgency = (text: string) => {
-    if (text.includes('فوری') || text.includes('سریع') || text.includes('امسال')) return 'فوری ⚡';
-    if (text.includes('زودتر') || text.includes('سال آینده')) return 'متوسط ⏰';
-    return 'بلندمدت 📅';
+    if (text.includes('urgent') || text.includes('fast') || text.includes('this year')) return 'Urgent ⚡';
+    if (text.includes('sooner') || text.includes('next year')) return 'Medium ⏰';
+    return 'Long-term 📅';
   };
 
   const identifySalesPoints = () => {
     const points = [];
     const data = consultationData;
     
-    if (data.age && parseInt(data.age) < 30) points.push('سن مناسب برای مهاجرت');
+    if (data.age && parseInt(data.age) < 30) points.push('Good age for immigration');
     const positions = Array.isArray(data.position) ? data.position : (data.position ? [data.position] : []);
     const positionStr = positions.join(',');
     if (positionStr.includes('master') || positionStr.includes('startup')) {
-      points.push('هدف‌گذاری بلندپروازانه');
+      points.push('Ambitious goals');
     }
     if (positionStr.includes('چهار فصل (آمیس)')) {
-      points.push('علاقه‌مند به برنامه پرطرفدار');
+      points.push('Interested in a popular program');
     }
     if (positionStr.includes('university') || positionStr.includes('high-school')) {
-      points.push('تمرکز روی تحصیل');
+      points.push('Focus on education');
     }
-    if (data.city === 'تهران' || data.city === 'اصفهان') points.push('شهر بزرگ - دسترسی آسان');
-    if (data.acquainted === 'instagram' || data.acquainted === 'telegram') points.push('فعال در شبکه‌های اجتماعی');
+    if (data.acquainted === 'instagram' || data.acquainted === 'telegram') points.push('Active on social media');
     
     return points;
   };
@@ -1149,19 +1128,19 @@ export default function FinlandQ4Page() {
     const tips = [];
     const data = consultationData;
     
-    if (data.age && parseInt(data.age) < 25) tips.push('تأکید روی فرصت‌های تحصیلی');
-    if (data.age && parseInt(data.age) > 30) tips.push('تأکید روی فرصت‌های کاری');
-    if (data.acquainted === 'instagram') tips.push('ارسال محتوای visual');
+    if (data.age && parseInt(data.age) < 25) tips.push('Emphasize study opportunities');
+    if (data.age && parseInt(data.age) > 30) tips.push('Emphasize work opportunities');
+    if (data.acquainted === 'instagram') tips.push('Send visual content');
     const positions = Array.isArray(data.position) ? data.position : (data.position ? [data.position] : []);
     const positionStr = positions.join(',');
     if (positionStr.includes('high-school')) {
-      tips.push('معرفی دوره‌های آمادگی');
+      tips.push('Introduce preparatory courses');
     }
     if (positionStr.includes('startup')) {
-      tips.push('تأکید روی فرصت‌های کارآفرینی');
+      tips.push('Emphasize entrepreneurship opportunities');
     }
     if (positionStr.includes('چهار فصل')) {
-      tips.push('ارسال اطلاعات کامل برنامه آمیس');
+      tips.push('Send full information about Ammis program');
     }
     
     return tips;
@@ -1200,7 +1179,7 @@ export default function FinlandQ4Page() {
         const successMessage: Message = {
           id: `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           type: 'assistant',
-          content: `🎉  عالی  ${consultationData.first_name} جان!\n\n✅ درخواستتون با موفقیت ثبت شد و همین الان به تیم ما رسید!\n\nدوستان ما تا 24 ساعت آینده باهاتون تماس می‌گیرن و مشاوره کاملتون رو می‌دن. نگران نباشید، حتماً بهتون زنگ می‌زنیم! 😊\n\n📋 کد پیگیری شما: ${result.data.code}\n\nممنونم که به ما اعتماد کردید! 🙏`,
+          content: `🎉 Great, ${consultationData.first_name}!\n\n✅ Your request has been successfully submitted and received by our team.\n\nOur team will contact you within 24 hours for a full consultation. Don’t worry, we will definitely call you 😊\n\n📋 Your tracking code: ${result.data.code}\n\nThank you for your trust! 🙏`,
           timestamp: new Date()
         };
         setMessages(prev => [...prev, successMessage]);
@@ -1210,19 +1189,19 @@ export default function FinlandQ4Page() {
           const restartMessage: Message = {
             id: `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             type: 'assistant',
-            content: 'راستی اگه دوست یا آشنایی دارید که نیاز به مشاوره داره، خوشحال میشم کمکش کنم! فقط "مشاوره می‌خوام" بگید تا دوباره شروع کنیم 😊',
+            content: 'If you have a friend who needs consultation, I’d be happy to help! Just say "I want consultation" to start again 😊',
             timestamp: new Date()
           };
           setMessages(prev => [...prev, restartMessage]);
         }, 2000);
       } else {
-        throw new Error('خطا در ثبت درخواست');
+        throw new Error('Error submitting the request');
       }
     } catch (error) {
       const errorMessage: Message = {
         id: `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type: 'assistant',
-        content: 'اوه نه! 😔 یه مشکل فنی پیش اومده و نتونستم درخواستتون رو ثبت کنم.\n\nلطفاً دوباره تلاش کنید.\n\nمعذرت می‌خوام بابت این مشکل! 🙏',
+        content: 'Oh no! 😔 A technical issue occurred and I couldn’t submit your request.\n\nPlease try again.\n\nSorry for the inconvenience! 🙏',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -1242,7 +1221,7 @@ export default function FinlandQ4Page() {
     const welcomeMessage: Message = {
       id: `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       type: 'assistant',
-      content: 'آیا می‌خواهید فرم مشاوره را باز کنم؟',
+      content: 'Would you like me to open the consultation form?',
       timestamp: new Date()
     };
     
@@ -1250,7 +1229,7 @@ export default function FinlandQ4Page() {
   };
 
   const startNewChat = () => {
-    if (confirm('آیا می‌خواهید مکالمه جدیدی شروع کنید؟')) {
+    if (confirm('Do you want to start a new chat?')) {
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete('session');
       window.history.replaceState({}, '', newUrl.toString());
@@ -1258,7 +1237,7 @@ export default function FinlandQ4Page() {
       setMessages([{
         id: '1',
         type: 'assistant',
-        content: 'سلام! من «کیو» هستم، دستیار هوشمند و دوست شما در فنلاندکیو. 🇫🇮\n\nروی کمک من برای پیدا کردن بهترین مسیرهای مهاجرت، تحصیل و کار در فنلاند حساب کنید. هر سوالی دارید، بپرسید!\n\n💡 نکته مهم: اگر برای شروع مسیر خود نیاز به راهنمایی تخصصی دارید، کافی‌ست بنویسید "مشاوره می‌خوام" تا فوراً فرم مشاوره رایگان را برایتان ارسال کنم.\n\nآماده‌ام تا به شما کمک کنم. از کجا شروع کنیم؟',
+        content: 'Hello! I am Q, your smart assistant at FinlandQ. 🇫🇮\n\nCount on me to help you find the best paths for immigration, study, and work in Finland. Ask me anything!\n\n💡 Tip: If you need professional guidance to start, just type "I want consultation" and I will open the free consultation form for you.\n\nI am ready to help. Where shall we start?',
         timestamp: new Date()
       }]);
       
@@ -1275,7 +1254,7 @@ export default function FinlandQ4Page() {
     const helpMessage: Message = {
       id: `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       type: 'assistant',
-        content: `🎯 **راهنمای استفاده از کیوچت:**\n\n💬 **چت عادی:**\n• هر سوالی در مورد مهاجرت، تحصیل یا کار در فنلاند دارید بپرسید\n• من با اطلاعات به‌روز و دقیق کمکتون می‌کنم\n\n📋 **درخواست مشاوره:**\n• فقط بنویسید "مشاوره می‌خوام"\n• فرم کامل مشاوره برایتان باز می‌شود\n• کارشناسان ما تا 24 ساعت با شما تماس می‌گیرند\n\n🔍 **موضوعات پوشش داده شده:**\n• مهاجرت به فنلاند\n• تحصیل در دانشگاه‌های فنلاند\n• کار و اشتغال\n• ویزا و اقامت\n• زندگی در فنلاند\n• سرمایه‌گذاری و استارتاپ\n\nآماده‌ام کمکتون کنم! 😊`,
+        content: `🎯 **How to use QChat:**\n\n💬 **Regular chat:**\n• Ask anything about immigration, study, or work in Finland\n• I will help you with up-to-date and accurate information\n\n📋 **Consultation request:**\n• Just type "I want consultation"\n• The full consultation form will open for you\n• Our experts will contact you within 24 hours\n\n🔍 **Topics covered:**\n• Immigration to Finland\n• Studying at Finnish universities\n• Jobs and employment\n• Visa and residence\n• Life in Finland\n• Investment and startup\n\nI’m ready to help! 😊`,
       timestamp: new Date()
     };
     setMessages(prev => [...prev, helpMessage]);
@@ -1286,7 +1265,7 @@ export default function FinlandQ4Page() {
   };
 
   return (
-    <div className="h-screen flex overflow-hidden bg-gray-50" dir="rtl">
+    <div className="h-screen flex overflow-hidden bg-gray-50" dir="ltr">
             {/* Mobile Sidebar */}
       <div className={`fixed inset-y-0 right-0 z-50 w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'} md:hidden`}>
         <div className="flex flex-col h-full">
@@ -1294,7 +1273,7 @@ export default function FinlandQ4Page() {
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <div className="flex items-center gap-3">
               <img src="/qchat.png" alt="FinlandQ" className="w-8 h-8" />
-              <h2 className="text-lg font-semibold text-gray-900">کیوچت</h2>
+              <h2 className="text-lg font-semibold text-gray-900">QChat</h2>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -1312,7 +1291,7 @@ export default function FinlandQ4Page() {
               className="w-full flex items-center gap-3 p-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors mb-4"
             >
               <Plus className="w-5 h-5" />
-              <span>چت جدید</span>
+              <span>New chat</span>
             </button>
 
             {/* Navigation Buttons */}
@@ -1322,7 +1301,7 @@ export default function FinlandQ4Page() {
                 className="w-full flex items-center gap-3 p-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <HelpCircle className="w-5 h-5" />
-                <span>راهنما</span>
+                <span>Help</span>
               </button>
               
               <button
@@ -1330,7 +1309,7 @@ export default function FinlandQ4Page() {
                 className="w-full flex items-center gap-3 p-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <Users className="w-5 h-5" />
-                <span>درخواست مشاوره</span>
+                <span>Request consultation</span>
               </button>
             </div>
           </div>
@@ -1339,7 +1318,7 @@ export default function FinlandQ4Page() {
           <div className="p-4 border-t border-gray-200">
             <div className="flex items-center gap-3 text-sm text-gray-600">
               <User className="w-4 h-4" />
-              <span>کاربر</span>
+              <span>User</span>
             </div>
           </div>
         </div>
@@ -1359,7 +1338,7 @@ export default function FinlandQ4Page() {
             
             <div className="flex items-center gap-3">
               <img src="/qchat.png" alt="FinlandQ" className="w-8 h-8" />
-              <h1 className="text-lg font-semibold text-gray-900">کیوچت</h1>
+              <h1 className="text-lg font-semibold text-gray-900">QChat</h1>
             </div>
 
             {/* Desktop Navigation Buttons */}
@@ -1369,7 +1348,7 @@ export default function FinlandQ4Page() {
                 className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
               >
                 <Plus className="w-4 h-4" />
-                <span>چت جدید</span>
+                <span>New chat</span>
               </button>
               
               <button
@@ -1377,7 +1356,7 @@ export default function FinlandQ4Page() {
                 className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
               >
                 <HelpCircle className="w-4 h-4" />
-                <span>راهنما</span>
+                <span>Help</span>
               </button>
               
               <button
@@ -1385,12 +1364,12 @@ export default function FinlandQ4Page() {
                 className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
               >
                 <Users className="w-4 h-4" />
-                <span>درخواست مشاوره</span>
+                <span>Request consultation</span>
               </button>
               
               <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                آنلاین
+                Online
               </div>
             </div>
 
@@ -1398,7 +1377,7 @@ export default function FinlandQ4Page() {
             <div className="md:hidden flex items-center gap-2">
               <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                آنلاین
+                Online
               </div>
             </div>
           </div>
@@ -1407,7 +1386,7 @@ export default function FinlandQ4Page() {
         {/* Ready Prompts */}
         {messages.length === 1 && (
           <div className="bg-white border-b border-gray-200 p-6 flex-shrink-0">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">از کجا شروع کنیم؟</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Where shall we start?</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {readyPrompts.map((prompt) => (
                 <motion.button
@@ -1415,7 +1394,7 @@ export default function FinlandQ4Page() {
                   onClick={() => sendMessage(prompt.prompt)}
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
-                  className="p-4 text-right border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200"
+                  className="p-4 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200"
                 >
                   <h4 className="font-semibold text-gray-900 mb-1">{prompt.title}</h4>
                   <p className="text-sm text-gray-600">{prompt.description}</p>
@@ -1457,7 +1436,7 @@ export default function FinlandQ4Page() {
                       </ReactMarkdown>
                     </div>
                     <div className={`text-xs mt-2 ${message.type === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
-                      {message.timestamp.toLocaleTimeString('fa-IR', { 
+                      {message.timestamp.toLocaleTimeString('en-US', { 
                         hour: '2-digit', 
                         minute: '2-digit' 
                       })}
@@ -1493,7 +1472,7 @@ export default function FinlandQ4Page() {
                         className="w-2 h-2 bg-gray-400 rounded-full"
                       />
                     </div>
-                    <span className="text-sm text-gray-600">در حال تایپ...</span>
+                    <span className="text-sm text-gray-600">Typing...</span>
                   </div>
                 </div>
               </motion.div>
@@ -1507,43 +1486,43 @@ export default function FinlandQ4Page() {
         {isInConsultationMode && (
           <div className="border-t border-gray-100 p-4 bg-white">
             {consultationStep === -1 ? (
-              // مرحله تأیید - فقط گزینه‌های بله/خیر
+              // Confirmation step - Yes/No options only
               <div className="space-y-2">
                 <div className="text-center mb-2 text-sm text-gray-600">
-                  مرحله تأیید - لطفاً انتخاب کنید:
+                  Confirmation step - please choose:
                 </div>
                 <div className="text-center mb-3 text-xs text-gray-500">
-                  فرم مشاوره فقط پس از تأیید شما باز خواهد شد
+                  The consultation form will only open after your confirmation
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <motion.button
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => {
-                      console.log('🔘 User clicked بله button');
-                      handleConsultationAnswer('بله');
+                      console.log('🔘 User clicked Yes button');
+                      handleConsultationAnswer('yes');
                     }}
                     disabled={isLoading}
                     className="text-right p-2 sm:p-3 bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border border-green-200 rounded-lg transition-all duration-300 disabled:opacity-50 text-gray-800 text-sm sm:text-base shadow-sm hover:shadow-md"
                   >
-                    بله، آماده‌ام ✅
+                    Yes, I am ready ✅
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => {
-                      console.log('🔘 User clicked خیر button');
-                      handleConsultationAnswer('خیر');
+                      console.log('🔘 User clicked No button');
+                      handleConsultationAnswer('no');
                     }}
                     disabled={isLoading}
                     className="text-right p-2 sm:p-3 bg-gradient-to-r from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 border border-red-200 rounded-lg transition-all duration-300 disabled:opacity-50 text-gray-800 text-sm sm:text-base shadow-sm hover:shadow-md"
                   >
-                    فعلاً نه ❌
+                    Not now ❌
                   </motion.button>
                 </div>
               </div>
             ) : consultationStep >= 0 && consultationStep < consultationQuestions.length ? (
-              // سوالات اصلی
+              // Main questions
               <QuickReplyOptions 
                 question={consultationQuestions[consultationStep]}
                 onSelect={handleConsultationAnswer}
@@ -1563,12 +1542,12 @@ export default function FinlandQ4Page() {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyDown={handleKeyPress}
-                    placeholder="پیام خود را بنویسید..."
+                    placeholder="Type your message..."
                     className="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 pr-12 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm focus:shadow-md transition-all duration-300 text-sm"
                     rows={1}
                     style={{
-                      direction: 'rtl',
-                      textAlign: 'right'
+                      direction: 'ltr',
+                      textAlign: 'left'
                     }}
                     disabled={isLoading}
                   />
@@ -1587,7 +1566,7 @@ export default function FinlandQ4Page() {
                 </motion.button>
               </div>
               <div className="mt-2 text-xs text-gray-500 text-center">
-                Enter برای ارسال • Shift+Enter برای خط جدید
+                Press Enter to send • Shift+Enter for a new line
               </div>
             </div>
           </div>

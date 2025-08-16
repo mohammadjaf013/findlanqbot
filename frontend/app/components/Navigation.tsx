@@ -22,7 +22,7 @@ export default function Navigation() {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <img className="h-8 w-auto" src="/qchat.png" alt="FinlandQ" />
-              <span className="mr-2 text-lg font-semibold text-gray-900">فنلاند کیو</span>
+              <span className="mr-2 text-lg font-semibold text-gray-900">فنلاندکیو</span>
             </div>
           </div>
           

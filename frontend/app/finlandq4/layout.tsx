@@ -2,10 +2,9 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'فنلاند کیو - دستیار هوشمند مهاجرت به فنلاند',
-  description: 'سیستم چت هوشمند برای راهنمایی مهاجرت، تحصیل و کار در فنلاند',
+  description: 'کیو، دستیار هوشمند فنلاندکیو برای پاسخ به تمام سوالات مربوط به مهاجرت تحصیلی، کاری و استارتاپی به فنلاند است. مسیر خود را با اطلاعات دقیق و به‌روز شروع کنید.',
   keywords: 'فنلاند، مهاجرت، تحصیل، کار، ویزا، استارتاپ',
 }
-
 export default function RootLayout({
   children,
 }: {
@@ -16,6 +15,8 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
+        
+   
       </head>
       <body className="font-persian antialiased">
       

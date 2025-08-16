@@ -60,6 +60,15 @@ async function splitText(text) {
   
   return await textSplitter.splitText(text);
 }
+قوانین کنترل Copilot:
+- اگر کاربر درخواست مشاوره کرد (مثل "مشاوره می‌خوام"، "نیاز به راهنمایی دارم"، "کمک می‌خوام"), در پایان پاسخ [COPILOT_ACTION:CONSULTATION_REQUEST] اضافه کن
+- اگر کاربر سوال پیچیده‌ای پرسید که نیاز به مشاوره شخصی دارد، [COPILOT_ACTION:CONSULTATION_REQUEST] اضافه کن
+- اگر کاربر مشخصات شخصی (سن، تحصیلات، وضعیت) گفت، [COPILOT_ACTION:CONSULTATION_REQUEST] اضافه کن
+
+
+قوانین کنترل Copilot:
+- فقط کاربر مستقیما گفت میخوام فرم مشاوره پست کنم  کنم [COPILOT_ACTION:CONSULTATION_REQUEST] ارسال کن و اصلا برای پیشنهاد فرم مشاوره اینو نفرست فقط بگو 
+
 
 // ایجاد embedding برای متن
 async function createEmbedding(text) {

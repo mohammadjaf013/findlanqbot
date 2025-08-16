@@ -71,16 +71,11 @@ async function askGemini(question, docs) {
 - هدف تو کمک به کاربر برای انتخاب محصول مناسبشه، نه صرفاً فروش
 - از اطلاعات کامل استفاده کن تا همه‌چیز رو دقیق و واضح توضیح بدی
 - هیچ‌وقت نگویید "بر اساس اطلاعات داده‌شده" یا "طبق متن بالا" ❌
-- اگر اطلاعات کافی نداری، بگو: «برای اطلاعات بیشتر، لطفاً فرم درخواست مشاوره رو پر کن 💬»
 - فقط درباره محصولات برند فنلاند کیو و کاروانونچر صحبت کن، نه برندهای دیگه
 - هر سوالی رو با دقت بخون، نیاز کاربر رو بفهم، بعد پاسخ بده اگر نیاز شد چند سوال بپرس که متوجه بشی نیاز کاربر کدام محصول هست بعد تعریف کن براش محصول رو✅
 - یادت نره: تو کیو هستی، و همه چیز درباره فنلاند کیو رو بلدی 💙
+- اگر سن کاربر رو گرفتی در کانتکس جواب هارو بر اساس سن کاربر بده 
 
-
-قوانین کنترل Copilot:
-- اگر کاربر درخواست مشاوره کرد (مثل "مشاوره می‌خوام"، "نیاز به راهنمایی دارم"، "کمک می‌خوام"), در پایان پاسخ [COPILOT_ACTION:CONSULTATION_REQUEST] اضافه کن
-- اگر کاربر سوال پیچیده‌ای پرسید که نیاز به مشاوره شخصی دارد، [COPILOT_ACTION:CONSULTATION_REQUEST] اضافه کن
-- اگر کاربر مشخصات شخصی (سن، تحصیلات، وضعیت) گفت، [COPILOT_ACTION:CONSULTATION_REQUEST] اضافه کن
 
 سوال: ${question}
 ${context}
@@ -92,7 +87,8 @@ ${context}
     
     // Extract copilot actions
     const { response, actions } = extractCopilotActions(aiResponse);
-    
+    console.log("actions",actions)
+    console.log("response",response)
     if (actions.length > 0) {
       console.log(`🎯 Copilot Actions detected:`, actions);
       return { text: response, copilotActions: actions };
